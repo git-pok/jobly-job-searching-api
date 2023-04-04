@@ -149,8 +149,8 @@ class Company {
         data,
         {
           name: "name ILIKE",
-          minEmployees: "num_employees >",
-          maxEmployees: "num_employees <"
+          minEmployees: "num_employees >=",
+          maxEmployees: "num_employees <="
         });
 
     const nameExis = data.name;
@@ -161,7 +161,7 @@ class Company {
 
     const result = await db.query(querySql, [...values]);
     const company = result.rows;
-    if (company.length === 0) throw new ExpressError(`No companies found.`);
+    if (company.length === 0) throw new ExpressError(`No companies found.`, 404);
     return company;
   }
 }

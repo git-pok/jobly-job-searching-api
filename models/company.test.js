@@ -1,7 +1,8 @@
 "use strict";
-
+// ADDED LINE 3.
+process.env.NODE_ENV = 'test';
 const db = require("../db.js");
-const { BadRequestError, NotFoundError } = require("../expressError");
+const { BadRequestError, NotFoundError, ExpressError } = require("../expressError");
 const Company = require("./company.js");
 const {
   commonBeforeAll,
@@ -204,5 +205,63 @@ describe("remove", function () {
     } catch (err) {
       expect(err instanceof NotFoundError).toBeTruthy();
     }
+  });
+});
+
+/************************************** coFilter */
+// ADDED LINE 212-267
+describe('coFilter', ()=> {
+  test('Search with one filter', async()=> {
+    const data = {"name": "c1"};
+    const res = await Company.coFilter(data);
+  });
+
+  test('Search with two filters', async()=> {
+    const data = {"name": "c2", "minEmployees": 2};
+    const res = await Company.coFilter(data);
+    const resData = [
+      {
+        handle: "c2",
+        name: "C2",
+        description: "Desc2",
+        num_employees: 2,
+        logo_url: "http://c2.img",
+      }
+    ]
+    
+    expect(res).toEqual(resData);
+  });
+
+  test('Search with three filters', async()=> {
+    const data = {"name": "c", "minEmployees": 1, "maxEmployees": 2};
+    const res = await Company.coFilter(data);
+    const resData = [
+      {
+        handle: "c1",
+        name: "C1",
+        description: "Desc1",
+        num_employees: 1,
+        logo_url: "http://c1.img",
+      },
+      {
+        handle: "c2",
+        name: "C2",
+        description: "Desc2",
+        num_employees: 2,
+        logo_url: "http://c2.img",
+      }
+    ]
+    
+    expect(res).toEqual(resData);
+  });
+
+  test('Returns ExpressError for not found company', async()=> {
+    const data = {"name": "wat"};
+    expect(Company.coFilter(data)).rejects.toThrowError(new ExpressError("No companies found."));
+  });
+
+  test('Returns ExpressError for invalid filter', async()=> {
+    const data = {"wrong": "wat"};
+    expect(Company.coFilter(data)).rejects.toThrowError(new ExpressError("Invalid filter."));
   });
 });
