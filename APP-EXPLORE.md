@@ -9,3 +9,9 @@ We do not put any of the header data in strings either. So when we make a patch 
 
 ### sqlForPartialUpdate Tests
 I tested the function with data, without data, and with no arguments. I commented the code also.
+
+### /companies Query Filter
+I added helper functions to sql.js, then I created a class method
+in comany.js to call the query filter function, then I called
+the class method in /GET /companies route handler, along with the
+functions in sql.js that I did not call in the class method for it.

@@ -1,8 +1,8 @@
 "use strict";
 
 const db = require("../db");
-const { BadRequestError, NotFoundError } = require("../expressError");
-const { sqlForPartialUpdate } = require("../helpers/sql");
+const { BadRequestError, NotFoundError, ExpressError } = require("../expressError");
+const { sqlForPartialUpdate, sqlForCoFilter, verifyQryParams } = require("../helpers/sql");
 
 /** Related functions for companies. */
 
@@ -139,6 +139,30 @@ class Company {
     const company = result.rows[0];
 
     if (!company) throw new NotFoundError(`No company: ${handle}`);
+  }
+
+  // ADDED LINE 145-166
+  static async coFilter(data) {
+    const verifyFilters = verifyQryParams(data);
+    if (verifyFilters === false) throw new ExpressError('Invalid filter.', 400);
+    const { setCols, values } = sqlForCoFilter(
+        data,
+        {
+          name: "name ILIKE",
+          minEmployees: "num_employees >",
+          maxEmployees: "num_employees <"
+        });
+
+    const nameExis = data.name;
+    const querySql = `SELECT handle, name, num_employees, description,
+                      logo_url FROM companies 
+                      WHERE ${setCols} 
+                      `;                      
+
+    const result = await db.query(querySql, [...values]);
+    const company = result.rows;
+    if (company.length === 0) throw new ExpressError(`No companies found.`);
+    return company;
   }
 }
 

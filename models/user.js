@@ -171,6 +171,7 @@ class User {
           lastName: "last_name",
           isAdmin: "is_admin",
         });
+
     const usernameVarIdx = "$" + (values.length + 1);
 
     const querySql = `UPDATE users 
@@ -183,7 +184,7 @@ class User {
                                 is_admin AS "isAdmin"`;
     const result = await db.query(querySql, [...values, username]);
     const user = result.rows[0];
-
+  
     if (!user) throw new NotFoundError(`No user: ${username}`);
 
     delete user.password;

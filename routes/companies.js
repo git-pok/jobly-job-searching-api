@@ -1,9 +1,10 @@
 "use strict";
 
 /** Routes for companies. */
-
+// const db = require('../db.js');
 const jsonschema = require("jsonschema");
 const express = require("express");
+const { strToNum, verifyMinMaxEmps } = require('../helpers/sql.js');
 
 const { BadRequestError } = require("../expressError");
 const { ensureLoggedIn } = require("../middleware/auth");
@@ -52,8 +53,18 @@ router.post("/", ensureLoggedIn, async function (req, res, next) {
 
 router.get("/", async function (req, res, next) {
   try {
-    const companies = await Company.findAll();
-    return res.json({ companies });
+    // ADDED LINE 57-64
+    const query = req.query;
+    verifyMinMaxEmps(query);
+    const queryObj = strToNum(query);
+    const keys = Object.keys(query);
+    if (keys.length !== 0) {
+      const company = await Company.coFilter(queryObj);
+      return res.json(company);
+    } else {
+      const companies = await Company.findAll();
+      return res.json({ companies });
+    }
   } catch (err) {
     return next(err);
   }
@@ -118,10 +129,22 @@ router.delete("/:handle", ensureLoggedIn, async function (req, res, next) {
 
 // ADDED THIS ROUTE FOR TESTING QUERIES
 // DELETE IT WHEN DONE
-// router.get('/:query', (req, res, next)=> {
-//   const q = req.params;
-//   return res.send(q);
-// })
+router.get('/q/s', async (req, res, next)=> {
+  const q = req.query;
+  console.log('Q HDHDHDHDHDHDHDH', q);
+  // const r = await db.query(`SELECT handle, name, num_employees,
+  //   description, logo_url FROM companies 
+  //   WHERE name ILIKE $1 AND num_employees > $2`, ['%hall%', '300']);
+  // console.log('JDJDJDJDJDJD', r.rows);
+  try {
+    const company = await Company.coFilter(q);
+    return res.json(company);
+  } catch(e) {
+    return next(e);
+  }
+  // console.log('COMPANY URURURURURU', company);
+  // return res.json(q);
+})
 
 
 module.exports = router;
