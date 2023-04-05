@@ -1,6 +1,7 @@
 "use strict";
 // ADDED LINE 3.
 process.env.NODE_ENV = 'test';
+
 const db = require("../db.js");
 const { BadRequestError, NotFoundError, ExpressError } = require("../expressError");
 const Company = require("./company.js");
@@ -209,7 +210,7 @@ describe("remove", function () {
 });
 
 /************************************** Part Two: Companies, coFilter */
-// ADDED LINE 212-267
+// ADDED LINE 214-268
 describe('Part Two: Companies, coFilter', ()=> {
   test('Query with one filter', async()=> {
     const data = {"name": "c1"};

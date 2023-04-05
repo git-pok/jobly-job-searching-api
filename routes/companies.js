@@ -7,7 +7,7 @@ const express = require("express");
 const { strToNum, verifyMinMaxEmps } = require('../helpers/sql.js');
 
 const { BadRequestError } = require("../expressError");
-const { ensureLoggedIn } = require("../middleware/auth");
+const { ensureLoggedIn, ensureLoggedInAndAdmin } = require("../middleware/auth");
 const Company = require("../models/company");
 
 const companyNewSchema = require("../schemas/companyNew.json");
@@ -23,8 +23,8 @@ const router = new express.Router();
  *
  * Authorization required: login
  */
-
-router.post("/", ensureLoggedIn, async function (req, res, next) {
+// ADDED ensureLoggedInAndAdmin IN LINE 27
+router.post("/", ensureLoggedInAndAdmin, async function (req, res, next) {
   try {
     const validator = jsonschema.validate(req.body, companyNewSchema);
     if (!validator.valid) {
@@ -52,7 +52,7 @@ router.post("/", ensureLoggedIn, async function (req, res, next) {
 
 router.get("/", async function (req, res, next) {
   try {
-    // ADDED LINE 57-64
+    // ADDED LINE 56-63
     const query = req.query;
     verifyMinMaxEmps(query);
     const queryObj = strToNum(query);
@@ -97,7 +97,8 @@ router.get("/:handle", async function (req, res, next) {
  * Authorization required: login
  */
 
-router.patch("/:handle", ensureLoggedIn, async function (req, res, next) {
+// ADDED ensureLoggedInAndAdmin IN LINE 101
+router.patch("/:handle", ensureLoggedInAndAdmin, async function (req, res, next) {
   try {
     const validator = jsonschema.validate(req.body, companyUpdateSchema);
     if (!validator.valid) {
@@ -117,7 +118,8 @@ router.patch("/:handle", ensureLoggedIn, async function (req, res, next) {
  * Authorization: login
  */
 
-router.delete("/:handle", ensureLoggedIn, async function (req, res, next) {
+// ADDED ensureLoggedInAndAdmin IN LINE 122
+router.delete("/:handle", ensureLoggedInAndAdmin, async function (req, res, next) {
   try {
     await Company.remove(req.params.handle);
     return res.json({ deleted: req.params.handle });
@@ -125,25 +127,6 @@ router.delete("/:handle", ensureLoggedIn, async function (req, res, next) {
     return next(err);
   }
 });
-
-// ADDED THIS ROUTE FOR TESTING QUERIES
-// DELETE IT WHEN DONE
-router.get('/q/s', async (req, res, next)=> {
-  const q = req.query;
-  console.log('Q HDHDHDHDHDHDHDH', q);
-  // const r = await db.query(`SELECT handle, name, num_employees,
-  //   description, logo_url FROM companies 
-  //   WHERE name ILIKE $1 AND num_employees > $2`, ['%hall%', '300']);
-  // console.log('JDJDJDJDJDJD', r.rows);
-  try {
-    const company = await Company.coFilter(q);
-    return res.json(company);
-  } catch(e) {
-    return next(e);
-  }
-  // console.log('COMPANY URURURURURU', company);
-  // return res.json(q);
-})
 
 
 module.exports = router;
