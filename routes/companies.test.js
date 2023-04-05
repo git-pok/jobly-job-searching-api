@@ -1,5 +1,6 @@
 "use strict";
-
+// ADDED LINE 3.
+process.env.NODE_ENV = 'test';
 const request = require("supertest");
 
 const db = require("../db");
@@ -105,6 +106,70 @@ describe("GET /companies", function () {
         .get("/companies")
         .set("authorization", `Bearer ${u1Token}`);
     expect(resp.statusCode).toEqual(500);
+  });
+});
+
+// ADDED LINE 113-174
+/************************************** GET /companies? */
+describe('/GET /companies?', ()=> {
+  test('Query with name filter', async ()=> {
+    const res = await request(app).get('/companies').query({ name: "c1" });
+    
+    const co1 = {
+      handle: "c1",
+      name: "C1",
+      description: "Desc1",
+      num_employees: 1,
+      logo_url: "http://c1.img"
+    };
+    
+    expect(res.body).toEqual( [ co1 ] );
+  });
+
+  test('Query with name and minEmployees filter', async ()=> {
+    const res = await request(app).get('/companies').query({ name: "c", minEmployees: "2" });
+    
+    const co2 = {
+      handle: "c2",
+      name: "C2",
+      description: "Desc2",
+      num_employees: 2,
+      logo_url: "http://c2.img",
+    };
+
+    const co3 = {
+      handle: "c3",
+      name: "C3",
+      description: "Desc3",
+      num_employees: 3,
+      logo_url: "http://c3.img",
+    };
+    
+    expect(res.body).toEqual( [ co2, co3 ] );
+  });
+
+  test('Query with name, minEmployees, and maxEmployees filter', async ()=> {
+    const res = await request(app).get('/companies').query({ name: "c", minEmployees: "2", maxEmployees: "2" });
+    
+    const co2 = {
+      handle: "c2",
+      name: "C2",
+      description: "Desc2",
+      num_employees: 2,
+      logo_url: "http://c2.img",
+    };
+    
+    expect(res.body).toEqual( [ co2 ] );
+  });
+
+  test('Returns an error for not found company', async ()=> {
+    const res = await request(app).get('/companies').query({ name: "wat" });
+    expect(res.statusCode).toBe(404);
+  });
+
+  test('Returns an error for invalid query', async ()=> {
+    const res = await request(app).get('/companies').query({ wrong: "wat" });
+    expect(res.statusCode).toBe(400);
   });
 });
 
