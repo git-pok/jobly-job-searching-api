@@ -208,15 +208,15 @@ describe("remove", function () {
   });
 });
 
-/************************************** coFilter */
+/************************************** Part Two: Companies, coFilter */
 // ADDED LINE 212-267
-describe('coFilter', ()=> {
-  test('Search with one filter', async()=> {
+describe('Part Two: Companies, coFilter', ()=> {
+  test('Query with one filter', async()=> {
     const data = {"name": "c1"};
     const res = await Company.coFilter(data);
   });
 
-  test('Search with two filters', async()=> {
+  test('Query with two filters', async()=> {
     const data = {"name": "c2", "minEmployees": 2};
     const res = await Company.coFilter(data);
     const resData = [
@@ -232,7 +232,7 @@ describe('coFilter', ()=> {
     expect(res).toEqual(resData);
   });
 
-  test('Search with three filters', async()=> {
+  test('Query with three filters', async()=> {
     const data = {"name": "c", "minEmployees": 1, "maxEmployees": 2};
     const res = await Company.coFilter(data);
     const resData = [

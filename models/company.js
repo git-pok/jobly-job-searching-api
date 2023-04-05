@@ -3,7 +3,8 @@
 const db = require("../db");
 const { BadRequestError, NotFoundError, ExpressError } = require("../expressError");
 const { sqlForPartialUpdate, sqlForCoFilter, verifyQryParams } = require("../helpers/sql");
-
+// ADDED LINE 7.
+const { coFilterJsToSql } = require("../config.js");
 /** Related functions for companies. */
 
 class Company {
@@ -141,24 +142,23 @@ class Company {
     if (!company) throw new NotFoundError(`No company: ${handle}`);
   }
 
-  // ADDED LINE 145-166
+  // ADDED LINE 145-167
   static async coFilter(data) {
+    // This verifies all qry params are allowed.
     const verifyFilters = verifyQryParams(data);
     if (verifyFilters === false) throw new ExpressError('Invalid filter.', 400);
+    // This creates and destructures the qry statements and pg values array.
+    // Look in config.js to see the object passed into sqlForCoFilter.
     const { setCols, values } = sqlForCoFilter(
         data,
-        {
-          name: "name ILIKE",
-          minEmployees: "num_employees >=",
-          maxEmployees: "num_employees <="
-        });
-
-    const nameExis = data.name;
+        coFilterJsToSql
+        );
+    // This creates the entire query that gets passed into db.query.
     const querySql = `SELECT handle, name, num_employees, description,
                       logo_url FROM companies 
                       WHERE ${setCols} 
                       `;                      
-
+    // This is the actual pg query.
     const result = await db.query(querySql, [...values]);
     const company = result.rows;
     if (company.length === 0) throw new ExpressError(`No companies found.`, 404);

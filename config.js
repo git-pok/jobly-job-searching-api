@@ -27,10 +27,19 @@ console.log("PORT:".yellow, PORT.toString());
 console.log("BCRYPT_WORK_FACTOR".yellow, BCRYPT_WORK_FACTOR);
 console.log("Database:".yellow, getDatabaseUri());
 console.log("---");
+// ADDED LINE 31-35
+// This gets passed into sqlForCoFilter in coFilter,
+// company.js, Line 154.
+const coFilterJsToSql = {
+  name: "name ILIKE",
+  minEmployees: "num_employees >=",
+  maxEmployees: "num_employees <="
+}
 
 module.exports = {
   SECRET_KEY,
   PORT,
   BCRYPT_WORK_FACTOR,
-  getDatabaseUri,
+  coFilterJsToSql,
+  getDatabaseUri
 };
