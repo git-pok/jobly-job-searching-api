@@ -15,3 +15,6 @@ I added helper functions to sql.js, then I created a class method
 in comany.js to call the query filter function, then I called
 the class method in /GET /companies route handler, along with the
 functions in sql.js that I did not call in the class method for it.
+
+### Jobs Table: Numeric Over Float Column Data Type
+Numeric is precise and enforces the exact precision and scale specified. Floats' precison is inexact.
