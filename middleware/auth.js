@@ -47,6 +47,28 @@ function ensureLoggedInAndAdmin(req, res, next) {
   }
 }
 
+// ADDED LINE 51-69.
+/** Middleware to ensure user is logged in and an admin or current user.
+ *
+ * If not, raises Unauthorized.
+ */
+
+function ensureCurrUserOrAdmin(req, res, next) {
+  try {
+    const userParams = req.params.username;
+    const resUserObj = res.locals.user;
+    const user = resUserObj ? res.locals.user.username : false;
+    console.log("USER", user);
+    const isCurrUser = userParams === user;
+    const admin = user ? res.locals.user.isAdmin : false;
+    if (!user) throw new UnauthorizedError();
+    else if (!isCurrUser && !admin) throw new UnauthorizedError();
+    return next();
+  } catch (err) {
+    return next(err);
+  }
+}
+
 /** Middleware to use when they must be logged in.
  *
  * If not, raises Unauthorized.
@@ -65,5 +87,6 @@ function ensureLoggedIn(req, res, next) {
 module.exports = {
   authenticateJWT,
   ensureLoggedIn,
-  ensureLoggedInAndAdmin
+  ensureLoggedInAndAdmin,
+  ensureCurrUserOrAdmin
 };
