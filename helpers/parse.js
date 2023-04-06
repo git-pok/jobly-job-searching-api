@@ -1,15 +1,16 @@
 // ADDED ALL LOGIC IN THIS FILE.
 const types = require('pg').types;
+const { BadRequestError } = require("../expressError");
 
-// In jobs table, the equity column is Numeric data type;
-// Numeric data is returned as a string.
-// parse() parses the string and turns it into a number.
-// "1.08" => 1.08
-function parse(val) {
-  types.setTypeParser(1700, (val)=> Number(val));
+function handleOrIdParse(reqBody) {
+  const handle = reqBody.companyHandle;
+  const id = reqBody.id;
+
+  if (handle || id)
+    throw new BadRequestError("Company handle/id is not editable.");
 }
 
 
 module.exports = {
-  parse
+  handleOrIdParse
 };

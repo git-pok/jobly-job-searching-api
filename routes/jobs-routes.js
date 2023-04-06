@@ -1,67 +1,61 @@
 /** Routes for companies. */
-const db = require('../db.js');
+// const db = require('../db.js');
 const jsonschema = require("jsonschema");
 const express = require("express");
-const { parse } = require('../helpers/parse.js');
+const { handleOrIdParse } = require('../helpers/parse.js');
 const { strToNum, verifyMinMaxEmps } = require('../helpers/sql.js');
 
 const { BadRequestError } = require("../expressError");
 const { ensureLoggedIn, ensureLoggedInAndAdmin } = require("../middleware/auth");
-const Company = require("../models/company");
+const Job = require("../models/job.js");
 
-const companyNewSchema = require("../schemas/companyNew.json");
-const companyUpdateSchema = require("../schemas/companyUpdate.json");
+const jobNewSchema = require("../schemas/jobNew.json");
+const jobUpdateSchema = require("../schemas/jobUpdate.json");
 
 const router = new express.Router();
 
 // TEST ROUTE
-router.get("/", async function (req, res, next) {
-  try {
-
-    parse();
-
-    const resp = await db.query(`
-      SELECT id, salary, company_handle, equity
-      FROM jobs WHERE equity != 0 ORDER BY equity DESC;
-    `);
-
-    // const resp = await db.query(`
-    //   SELECT id, salary, company_handle, CAST(equity AS REAL)
-    //   FROM jobs WHERE equity != 0 ORDER BY equity DESC;
-    // `);
-    // return res.json({ msg: "Updating!" });
-    return res.json({ "resp": resp.rows });
-  } catch (err) {
-    return next(err);
-  }
-});
-
-/** POST / { company } =>  { company }
- *
- * company should be { handle, name, description, numEmployees, logoUrl }
- *
- * Returns { handle, name, description, numEmployees, logoUrl }
- *
- * Authorization required: login
- */
-// ADDED ensureLoggedInAndAdmin IN LINE 27
-// router.post("/", ensureLoggedInAndAdmin, async function (req, res, next) {
+// router.get("/", async function (req, res, next) {
 //   try {
-//     const validator = jsonschema.validate(req.body, companyNewSchema);
-//     if (!validator.valid) {
-//       const errs = validator.errors.map(e => e.stack);
-//       throw new BadRequestError(errs);
-//     }
-
-//     const company = await Company.create(req.body);
-//     return res.status(201).json({ company });
+//     console.log("JOB", Job);
+//     const resp = await db.query(`
+//       SELECT id, title, salary, company_handle,
+//       CAST(equity AS DOUBLE PRECISION)
+//       FROM jobs ORDER BY equity DESC;
+//     `);
+//     // return res.json({ msg: "Updating!" });
+//     return res.json({ "resp": resp.rows });
 //   } catch (err) {
 //     return next(err);
 //   }
 // });
 
+/** POST / { job } =>  { job }
+ *
+ * job should be { title, salary, equity, companyHandle }
+ *
+ * Returns { title, salary, equity, companyHandle }
+ *
+ * Authorization required: login and admin
+ */
+router.post("/", ensureLoggedInAndAdmin, async function (req, res, next) {
+  try {
+    const reqBody = req.body; 
+    const validator = jsonschema.validate(reqBody, jobNewSchema);
+    if (!validator.valid) {
+      const errs = validator.errors.map(e => e.stack);
+      throw new BadRequestError(errs);
+    }
+
+    const job = await Job.create(reqBody);
+    return res.status(201).json({ job });
+  } catch (err) {
+    return next(err);
+  }
+});
+
 /** GET /  =>
- *   { companies: [ { handle, name, description, numEmployees, logoUrl }, ...] }
+ *   { jobs: [ { title, salary, equity, companyHandle }, ...] }
  *
  * Can filter on provided search filters:
  * - minEmployees
@@ -71,83 +65,94 @@ router.get("/", async function (req, res, next) {
  * Authorization required: none
  */
 
-// router.get("/", async function (req, res, next) {
-//   try {
-//     // ADDED LINE 56-63
-//     const query = req.query;
-//     verifyMinMaxEmps(query);
-//     const queryObj = strToNum(query);
-//     const keys = Object.keys(query);
-//     if (keys.length !== 0) {
-//       const company = await Company.coFilter(queryObj);
-//       return res.json(company);
-//     } else {
-//       const companies = await Company.findAll();
-//       return res.json({ companies });
-//     }
-//   } catch (err) {
-//     return next(err);
-//   }
-// });
+router.get("/", async function (req, res, next) {
+  try {
+    // const query = req.query;
+    // verifyMinMaxEmps(query);
+    // const queryObj = strToNum(query);
+    // const keys = Object.keys(query);
+    // if (keys.length !== 0) {
+      // const company = await Company.coFilter(queryObj);
+      // return res.json(company);
+    // } else {
+      // const jobs = await Job.findAll();
+      // // return res.json({ jobs });
+      // return res.json({ msg: "Updating!" });
+    // }
+    const jobs = await Job.findAll();
+    return res.json({ jobs });
+  } catch (err) {
+    return next(err);
+  }
+});
 
-/** GET /[handle]  =>  { company }
- *
- *  Company is { handle, name, description, numEmployees, logoUrl, jobs }
- *   where jobs is [{ id, title, salary, equity }, ...]
- *
- * Authorization required: none
- */
+// /** GET /[handle]  =>  { jobs }
+//  *
+//  *  Job is [{ title, salary, equity, companyHandle, company }
+//  *   where company is { name, handle, description, numEmployees, logoUrl }
+//  *
+//  * Authorization required: none
+//  */
 
-// router.get("/:handle", async function (req, res, next) {
-//   try {
-//     const company = await Company.get(req.params.handle);
-//     return res.json({ company });
-//   } catch (err) {
-//     return next(err);
-//   }
-// });
+router.get("/:handle", async function (req, res, next) {
+  try {
+    const reqParams = req.params.handle; 
+    const jobs = await Job.get(reqParams);
+    return res.json( jobs );
+  } catch (err) {
+    return next(err);
+  }
+});
 
-/** PATCH /[handle] { fld1, fld2, ... } => { company }
- *
- * Patches company data.
- *
- * fields can be: { name, description, numEmployees, logo_url }
- *
- * Returns { handle, name, description, numEmployees, logo_url }
- *
- * Authorization required: login
- */
+// /** PATCH /[job] { fld1, fld2, ... } => { job }
+//  *
+//  * Patches job data.
+//  *
+//  * fields can be: { title, salary, equity, companyHandle, company }
+//  *
+//  * Returns { title, salary, equity, companyHandle, company }
+//  *
+//  * Authorization required: login
+//  */
 
-// ADDED ensureLoggedInAndAdmin IN LINE 101
-// router.patch("/:handle", ensureLoggedInAndAdmin, async function (req, res, next) {
-//   try {
-//     const validator = jsonschema.validate(req.body, companyUpdateSchema);
-//     if (!validator.valid) {
-//       const errs = validator.errors.map(e => e.stack);
-//       throw new BadRequestError(errs);
-//     }
+router.patch("/:title", ensureLoggedInAndAdmin, async function (req, res, next) {
+  try {
+    const reqBody = req.body;
+    const reqParams = req.params.title;
+    handleOrIdParse(reqBody);
+    // const handle = reqBody.companyHandle;
+    // const id = reqBody.id;
 
-//     const company = await Company.update(req.params.handle, req.body);
-//     return res.json({ company });
-//   } catch (err) {
-//     return next(err);
-//   }
-// });
+    // if (handle || id)
+    //   throw new BadRequestError("Company handle/id is not editable.");
 
-/** DELETE /[handle]  =>  { deleted: handle }
- *
- * Authorization: login
- */
+    const validator = jsonschema.validate(reqBody, jobUpdateSchema);
 
-// ADDED ensureLoggedInAndAdmin IN LINE 122
-// router.delete("/:handle", ensureLoggedInAndAdmin, async function (req, res, next) {
-//   try {
-//     await Company.remove(req.params.handle);
-//     return res.json({ deleted: req.params.handle });
-//   } catch (err) {
-//     return next(err);
-//   }
-// });
+    if (!validator.valid) {
+      const errs = validator.errors.map(e => e.stack);
+      throw new BadRequestError(errs);
+    }
+ 
+    const job = await Job.update(reqParams, reqBody);
+    return res.json({ job });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+// /** DELETE /[job]  =>  { deleted: job }
+//  *
+//  * Authorization: login
+//  */
+router.delete("/:title", ensureLoggedInAndAdmin, async function (req, res, next) {
+  try {
+    const reqParams = req.params.title;
+    await Job.remove(reqParams);
+    return res.json({ deleted: reqParams });
+  } catch (err) {
+    return next(err);
+  }
+});
 
 
 module.exports = router;

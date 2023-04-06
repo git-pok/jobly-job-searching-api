@@ -36,10 +36,21 @@ const coFilterJsToSql = {
   maxEmployees: "num_employees <="
 }
 
+// ADDED LINE 42-46.
+// This gets passed into sqlForPartialUpdate,
+// /models/job.js, Line 113.
+const jobJsToSql = {
+  title: "title",
+  salary: "salary",
+  companyHandle: "company_handle",
+  equity: "equity"
+}
+
 module.exports = {
   SECRET_KEY,
   PORT,
   BCRYPT_WORK_FACTOR,
   coFilterJsToSql,
+  jobJsToSql,
   getDatabaseUri
 };
