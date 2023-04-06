@@ -1,9 +1,8 @@
-"use strict";
-
 /** Routes for companies. */
 const db = require('../db.js');
 const jsonschema = require("jsonschema");
 const express = require("express");
+const { parse } = require('../helpers/parse.js');
 const { strToNum, verifyMinMaxEmps } = require('../helpers/sql.js');
 
 const { BadRequestError } = require("../expressError");
@@ -18,21 +17,18 @@ const router = new express.Router();
 // TEST ROUTE
 router.get("/", async function (req, res, next) {
   try {
-    // ADDED LINE 56-63
+
+    parse();
+
     const resp = await db.query(`
-      SELECT id, salary, equity, company_handle
-      FROM jobs;
+      SELECT id, salary, company_handle, equity
+      FROM jobs WHERE equity != 0 ORDER BY equity DESC;
     `);
 
     // const resp = await db.query(`
-    //   SELECT *
-    //   FROM companies
+    //   SELECT id, salary, company_handle, CAST(equity AS REAL)
+    //   FROM jobs WHERE equity != 0 ORDER BY equity DESC;
     // `);
-
-    // console.log(res.json());
-    
-    // const rows = res.json;
-    // console.log(res.rows);
     // return res.json({ msg: "Updating!" });
     return res.json({ "resp": resp.rows });
   } catch (err) {
