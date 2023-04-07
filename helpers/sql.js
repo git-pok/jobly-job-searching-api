@@ -83,35 +83,32 @@ function verifyMinMaxEmps(qryObj) {
   if (minEmps > maxEmps) throw new ExpressError("minEmployees cannot be greater than maxEmployees", 400);
 }
 
-// ADDED LINE 91-98
+// ADDED LINE 91-96
 // This verfies there are no query parameters that
 // our logic doesn't solve for.
 // {"name": "wall", "minEmployees": 200} => true
 // {"name": "wall", "wrongParam": 200} => false
 function verifyQryParams(qryObj) {
-  const newObj = {...qryObj};
-  const qryFilters = ['name', 'minEmployees', 'maxEmployees'];
-  const filterSet = new Set(qryFilters); 
-  const keys = Object.keys(newObj);
-  const verifyFilters = keys.every((val)=> filterSet.has(val)); 
+  const qryFilters = ['name', 'minEmployees', 'maxEmployees']; 
+  const keys = Object.keys(qryObj);
+  const verifyFilters = keys.every((val)=> qryFilters.indexOf(val) !== -1); 
   return verifyFilters;
 }
 
-// ADDED LINE 105-112
+// ADDED LINE 103-108
 // This verfies there are no query parameters that
 // our logic doesn't solve for.
 // {"title": "wall", "minSalary": 200} => true
 // {"name": "wall", "wrongParam": 200} => false
 function verifyJobQryParams(qryObj) {
-  const newObj = {...qryObj};
-  const qryFilters = ['title', 'minSalary', 'hasEquity'];
-  const filterSet = new Set(qryFilters); 
-  const keys = Object.keys(newObj);
-  const verifyFilters = keys.every((val)=> filterSet.has(val)); 
+  const qryFilters = ['title', 'minSalary', 'hasEquity']; 
+  const keys = Object.keys(qryObj);
+  const verifyFilters = keys.every((val)=> qryFilters.indexOf(val) !== -1);
   return verifyFilters;
 }
 
-// Gets called in sqlForJobFilter(), line 139.
+// ADDED LINE 117-126.
+// Gets called in sqlForJobFilter(), line 136.
 // This takes the query object and checks for hasEquity.
 // If hasEquity equals true, the value becomes zero.
 // If hasEquity equals false, the property is deleted.
@@ -128,7 +125,7 @@ function hasEquityFilter(qryObj) {
   } 
 }
 
-// ADDED LINE 132-163.
+// ADDED LINE 129-160.
 function sqlForJobFilter(dataToQuery, qryToSql) {
   const titleProp = dataToQuery.title;
   // If title in query, this wraps its value in %%,
