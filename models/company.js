@@ -80,12 +80,22 @@ class Company {
            FROM companies
            WHERE handle = $1`,
         [handle]);
-
+    
     const company = companyRes.rows[0];
-
     if (!company) throw new NotFoundError(`No company: ${handle}`);
+    // ADDED LINE 88-98.
+    // This extracts relational job data for the handle. 
+    const jobsRes = await db.query(
+        `SELECT id, title, salary,
+          company_handle AS "companyHandle",
+          CAST(equity AS DOUBLE PRECISION)
+        FROM jobs WHERE company_handle = $1
+        ORDER BY title`,
+        [handle]);
 
-    return company;
+    const jobs = jobsRes.rows;
+
+    return { company, jobs };
   }
 
   /** Update company data with `data`.
@@ -142,7 +152,7 @@ class Company {
     if (!company) throw new NotFoundError(`No company: ${handle}`);
   }
 
-  // ADDED LINE 145-167
+  // ADDED LINE 156-177.
   static async coFilter(data) {
     // This verifies all qry params are allowed.
     const verifyFilters = verifyQryParams(data);

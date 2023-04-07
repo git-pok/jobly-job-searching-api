@@ -76,11 +76,13 @@ router.get("/", async function (req, res, next) {
  *
  * Authorization required: none
  */
-
+// CHANGED LINE 85.
+// I returned company instead of { company },
+// company is already structured in an object.
 router.get("/:handle", async function (req, res, next) {
   try {
     const company = await Company.get(req.params.handle);
-    return res.json({ company });
+    return res.json( company );
   } catch (err) {
     return next(err);
   }
@@ -97,7 +99,7 @@ router.get("/:handle", async function (req, res, next) {
  * Authorization required: login
  */
 
-// ADDED ensureLoggedInAndAdmin IN LINE 101
+// ADDED ensureLoggedInAndAdmin IN LINE 103
 router.patch("/:handle", ensureLoggedInAndAdmin, async function (req, res, next) {
   try {
     const validator = jsonschema.validate(req.body, companyUpdateSchema);
@@ -118,7 +120,7 @@ router.patch("/:handle", ensureLoggedInAndAdmin, async function (req, res, next)
  * Authorization: login
  */
 
-// ADDED ensureLoggedInAndAdmin IN LINE 122
+// ADDED ensureLoggedInAndAdmin IN LINE 124
 router.delete("/:handle", ensureLoggedInAndAdmin, async function (req, res, next) {
   try {
     await Company.remove(req.params.handle);
