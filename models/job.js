@@ -2,9 +2,9 @@
 
 const db = require("../db");
 const { BadRequestError, NotFoundError, ExpressError } = require("../expressError");
-const { sqlForPartialUpdate, sqlForCoFilter, verifyQryParams } = require("../helpers/sql");
+const { sqlForPartialUpdate, sqlForJobFilter, verifyJobQryParams } = require("../helpers/sql");
 // ADDED LINE 7.
-const { jobJsToSql } = require("../config.js");
+const { jobJsToSql, jobFilterJsToSql } = require("../config.js");
 /** Related functions for companies. */
 
 class Job {
@@ -72,7 +72,7 @@ class Job {
 
   static async get(handle) {
     const jobsRes = await db.query(
-          `SELECT title, salary,
+          `SELECT id, title, salary,
           company_handle AS "companyHandle",
           CAST(equity AS DOUBLE PRECISION)
           FROM jobs WHERE company_handle = $1
@@ -95,14 +95,14 @@ class Job {
     return jobResults;
   }
 
-  // /** Update company data with `data`.
+  // /** Update job data with `data`.
   //  *
   //  * This is a "partial update" --- it's fine if data doesn't contain all the
   //  * fields; this only changes provided ones.
   //  *
-  //  * Data can include: { title, salary, equity, companyHandle, company }
+  //  * Data can include: { title, salary, equity }
   //  *
-  //  * Returns { title, salary, equity, companyHandle, company }
+  //  * Returns { title, salary, equity, companyHandle }
   //  *
   //  * Throws NotFoundError if not found.
   //  */
@@ -148,28 +148,27 @@ class Job {
     if (!job) throw new NotFoundError(`No job: ${title}`);
   }
 
-  // // ADDED LINE 145-167
-  // static async coFilter(data) {
-  //   // This verifies all qry params are allowed.
-  //   const verifyFilters = verifyQryParams(data);
-  //   if (verifyFilters === false) throw new ExpressError('Invalid filter.', 400);
-  //   // This creates and destructures the qry statements and pg values array.
-  //   // Look in config.js to see the object passed into sqlForCoFilter.
-  //   const { setCols, values } = sqlForCoFilter(
-  //       data,
-  //       coFilterJsToSql
-  //       );
-  //   // This creates the entire query that gets passed into db.query.
-  //   const querySql = `SELECT handle, name, num_employees, description,
-  //                     logo_url FROM companies 
-  //                     WHERE ${setCols} 
-  //                     `;                      
-  //   // This is the actual pg query.
-  //   const result = await db.query(querySql, [...values]);
-  //   const company = result.rows;
-  //   if (company.length === 0) throw new ExpressError(`No companies found.`, 404);
-  //   return company;
-  // }
+  static async jobFilter(data) {
+    // This verifies all qry params are allowed.
+    const verifyFilters = verifyJobQryParams(data);
+    if (verifyFilters === false) throw new ExpressError('Invalid filter.', 400);
+    // This creates and destructures the qry statements and pg values array.
+    // Look in config.js to see the object passed into sqlForJobFilter.
+    const { setCols, values } = sqlForJobFilter(
+        data,
+        jobFilterJsToSql
+        );
+    // This creates the entire query that gets passed into db.query.
+    const querySql = `SELECT id, title, salary, company_handle,
+                        CAST(equity AS DOUBLE PRECISION) FROM jobs 
+                        WHERE ${setCols} ORDER BY title 
+                      `;                      
+    // This is the actual pg query.
+    const result = await db.query(querySql, [...values]);
+    const job = result.rows;
+    if (job.length === 0) throw new ExpressError(`No companies found.`, 404);
+    return job;
+  }
 }
 
 

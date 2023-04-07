@@ -46,11 +46,21 @@ const jobJsToSql = {
   equity: "equity"
 }
 
+// ADDED LINE 52-57.
+// This gets passed into sqlForJobFilter,
+// /models/job.js, Line 159.
+const jobFilterJsToSql = {
+  title: "title ILIKE",
+  minSalary: "salary >=",
+  hasEquity: "equity !="
+}
+
 module.exports = {
   SECRET_KEY,
   PORT,
   BCRYPT_WORK_FACTOR,
   coFilterJsToSql,
   jobJsToSql,
+  jobFilterJsToSql,
   getDatabaseUri
 };

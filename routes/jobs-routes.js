@@ -1,9 +1,8 @@
-/** Routes for companies. */
-// const db = require('../db.js');
+/** Routes for jobs. */
+// ADDED ALL LOGIC IN THIS FILE.
 const jsonschema = require("jsonschema");
 const express = require("express");
 const { handleOrIdParse } = require('../helpers/parse.js');
-const { strToNum, verifyMinMaxEmps } = require('../helpers/sql.js');
 
 const { BadRequestError } = require("../expressError");
 const { ensureLoggedIn, ensureLoggedInAndAdmin } = require("../middleware/auth");
@@ -67,20 +66,16 @@ router.post("/", ensureLoggedInAndAdmin, async function (req, res, next) {
 
 router.get("/", async function (req, res, next) {
   try {
-    // const query = req.query;
-    // verifyMinMaxEmps(query);
-    // const queryObj = strToNum(query);
-    // const keys = Object.keys(query);
-    // if (keys.length !== 0) {
-      // const company = await Company.coFilter(queryObj);
-      // return res.json(company);
-    // } else {
-      // const jobs = await Job.findAll();
-      // // return res.json({ jobs });
-      // return res.json({ msg: "Updating!" });
-    // }
-    const jobs = await Job.findAll();
-    return res.json({ jobs });
+    const queryObj = req.query;
+    const keys = Object.keys(queryObj);
+    
+    if (keys.length !== 0) {
+      const job = await Job.jobFilter(queryObj);
+      return res.json(job);
+    } else {
+      const jobs = await Job.findAll();
+      return res.json({ jobs });
+    }
   } catch (err) {
     return next(err);
   }
@@ -108,9 +103,9 @@ router.get("/:handle", async function (req, res, next) {
 //  *
 //  * Patches job data.
 //  *
-//  * fields can be: { title, salary, equity, companyHandle, company }
+//  * fields can be: { title, salary, equity }
 //  *
-//  * Returns { title, salary, equity, companyHandle, company }
+//  * Returns { title, salary, equity, companyHandle }
 //  *
 //  * Authorization required: login
 //  */
@@ -120,12 +115,6 @@ router.patch("/:title", ensureLoggedInAndAdmin, async function (req, res, next) 
     const reqBody = req.body;
     const reqParams = req.params.title;
     handleOrIdParse(reqBody);
-    // const handle = reqBody.companyHandle;
-    // const id = reqBody.id;
-
-    // if (handle || id)
-    //   throw new BadRequestError("Company handle/id is not editable.");
-
     const validator = jsonschema.validate(reqBody, jobUpdateSchema);
 
     if (!validator.valid) {

@@ -12,7 +12,7 @@ function sqlForPartialUpdate(dataToUpdate, jsToSql) {
   // and accesses the corresponding sql commands from
   // the qryToSql object; this assures no extra sql commands
   // are added also. Then it uses each index of each key +1
-  // to create the pg value it gets set to.
+  // to create the pg parameterized values.
   // {firstName: 'Aliya', age: 32} => ['"first_name"=$1', '"age"=$2']
   const cols = keys.map((colName, idx) =>
       `"${jsToSql[colName] || colName}"=$${idx + 1}`,
@@ -42,7 +42,7 @@ function sqlForCoFilter(dataToQuery, qryToSql) {
   // and accesses the corresponding sql commands from
   // the qryToSql object; this assures no extra sql commands
   // are added also. Then it uses each index of each key +1
-  // to create the pg value it gets set to.
+  // to create the pg parameterized values.
   // {name: 'name ILIKE', minEmployees: 'num_employees >'} =>
   // ['name ILIKE=$1', 'num_employees >=$2']
   const cols = keys.map((colName, idx) =>
@@ -83,7 +83,7 @@ function verifyMinMaxEmps(qryObj) {
   if (minEmps > maxEmps) throw new ExpressError("minEmployees cannot be greater than maxEmployees", 400);
 }
 
-// ADDED LINE 87-98
+// ADDED LINE 91-98
 // This verfies there are no query parameters that
 // our logic doesn't solve for.
 // {"name": "wall", "minEmployees": 200} => true
@@ -97,10 +97,77 @@ function verifyQryParams(qryObj) {
   return verifyFilters;
 }
 
+// ADDED LINE 105-112
+// This verfies there are no query parameters that
+// our logic doesn't solve for.
+// {"title": "wall", "minSalary": 200} => true
+// {"name": "wall", "wrongParam": 200} => false
+function verifyJobQryParams(qryObj) {
+  const newObj = {...qryObj};
+  const qryFilters = ['title', 'minSalary', 'hasEquity'];
+  const filterSet = new Set(qryFilters); 
+  const keys = Object.keys(newObj);
+  const verifyFilters = keys.every((val)=> filterSet.has(val)); 
+  return verifyFilters;
+}
+
+// Gets called in sqlForJobFilter(), line 139.
+// This takes the query object and checks for hasEquity.
+// If hasEquity equals true, the value becomes zero.
+// If hasEquity equals false, the property is deleted.
+// { hasEquity: "true" } => { hasEquity: 0 }.
+// { hasEquity: "false" } => {}.
+function hasEquityFilter(qryObj) {
+  if (qryObj.hasEquity) {
+    const qryProp = qryObj.hasEquity;
+    if (qryProp === 'true') {
+      qryObj.hasEquity = 0;
+    } if (qryProp === 'false') {
+      delete qryObj.hasEquity;
+    }
+  } 
+}
+
+// ADDED LINE 132-163.
+function sqlForJobFilter(dataToQuery, qryToSql) {
+  const titleProp = dataToQuery.title;
+  // If title in query, this wraps its value in %%,
+  // to make the postgresql ILIKE expression work.
+  if (titleProp) dataToQuery.title = `%${titleProp}%`;
+  // This checks for hasEquity and chnages its value.
+  // Look at the comments that start on line 14 of this file.
+  hasEquityFilter(dataToQuery);
+  // This creates an array of keys out of the query object.
+  const keys = Object.keys(dataToQuery);
+  // This throws an error if there is no data.
+  if (keys.length === 0) throw new BadRequestError("No data");
+  // This sets the sql statements to their prot. values.
+  // It loops over the keys of the query object,
+  // and accesses the corresponding sql commands from
+  // the qryToSql object; this assures no extra sql commands
+  // are added also. Then it uses each index of each key +1
+  // to create the pg parameterized values.
+  // {title: 'title ILIKE', minSalary: 'salary >='} =>
+  // ['title ILIKE=$1', 'minSalary >=$2']
+  const cols = keys.map((colName, idx) =>
+      `${qryToSql[colName]} $${idx + 1}`,
+  );
+  // Returns an object with one property set to
+  // individual query statements, and another
+  // property set to a pg value array.
+  // {setCols: 'title ILIKE=$1 AND minSalary >=$2', values: [ 'Programmer', 100000 ]}
+  return {
+    setCols: cols.join(' AND '),
+    values: Object.values(dataToQuery)
+  };
+}
+
 module.exports = {
   sqlForPartialUpdate,
   sqlForCoFilter,
   strToNum,
   verifyMinMaxEmps,
-  verifyQryParams
+  verifyQryParams,
+  verifyJobQryParams,
+  sqlForJobFilter
 };
