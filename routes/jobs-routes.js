@@ -110,10 +110,10 @@ router.get("/:handle", async function (req, res, next) {
 //  * Authorization required: login
 //  */
 
-router.patch("/:title", ensureLoggedInAndAdmin, async function (req, res, next) {
+router.patch("/:id", ensureLoggedInAndAdmin, async function (req, res, next) {
   try {
     const reqBody = req.body;
-    const reqParams = req.params.title;
+    const reqParams = req.params.id;
     handleOrIdParse(reqBody);
     const validator = jsonschema.validate(reqBody, jobUpdateSchema);
 
@@ -133,9 +133,9 @@ router.patch("/:title", ensureLoggedInAndAdmin, async function (req, res, next) 
 //  *
 //  * Authorization: login
 //  */
-router.delete("/:title", ensureLoggedInAndAdmin, async function (req, res, next) {
+router.delete("/:id", ensureLoggedInAndAdmin, async function (req, res, next) {
   try {
-    const reqParams = req.params.title;
+    const reqParams = req.params.id;
     await Job.remove(reqParams);
     return res.json({ deleted: reqParams });
   } catch (err) {
