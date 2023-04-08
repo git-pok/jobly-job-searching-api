@@ -173,6 +173,48 @@ function verifyCreateJobParams(qryObj) {
   return verifyFilters;
 }
 
+// ADDED LINE 177-1
+// This accepts an object of data to be queried for
+// and an object of sql commands, and returns an object
+// that has sql insert statements, sql insert values
+// of pg values, and values.
+// (
+//  { username: 'Bowser', id: 206 },
+//  {username: 'username', id: 'job_id'}
+// ) => 
+// {setCols: (username, id), pgValues: ($1, $2), valuesArr: [Bowser, 206]}
+function sqlForJobInsert(dataToUpdate, jsToSql) {
+  // This throws an error if there is no data. 
+  if (!dataToUpdate || !jsToSql) throw new BadRequestError("No data");
+  // Creates keys from query object.
+  const keys = Object.keys(dataToUpdate);
+  // This creates the insert sql columns.
+  // It loops over the keys of the query object,
+  // and accesses the corresponding sql values from
+  // the jsToSql object; this assures no extra sql commands
+  // are added also.
+  // {username: 'Aliya', id: 32} => [username, id]
+  const cols = keys.map((colName, idx) =>
+      `${jsToSql[colName]}`,
+  );
+
+  // This creates the pg values for the insert query.
+  // {username: 'Aliya', id: 32} => [$1, $2] 
+  const vals = keys.map((colName, idx) =>
+      `$${idx + 1}`
+  );
+  // Returns an object with setCols set to an
+  // insert sql column statement, pgValues
+  // set to pg values for the sql insert values,
+  // and valuesArr set to each column's value.
+  // {setCols: (username, id), pgValues: ($1, $2), valuesArr [bowser, 206]}
+  return {
+    setCols: `(${cols.join(", ")})`,
+    pgValues: `(${vals.join(", ")})`,
+    valuesArr: Object.values(dataToUpdate),
+  };
+}
+
 module.exports = {
   sqlForPartialUpdate,
   sqlForCoFilter,
@@ -181,5 +223,6 @@ module.exports = {
   verifyQryParams,
   verifyJobQryParams,
   sqlForJobFilter,
-  verifyCreateJobParams
+  verifyCreateJobParams,
+  sqlForJobInsert
 };

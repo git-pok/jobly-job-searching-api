@@ -1,15 +1,17 @@
 "use strict";
 
+const Job = require("./job.js");
+const Application = require("./application.js");
 const db = require("../db");
 const bcrypt = require("bcrypt");
-const { sqlForPartialUpdate } = require("../helpers/sql");
+const { sqlForPartialUpdate, sqlForJobInsert } = require("../helpers/sql");
 const {
   NotFoundError,
   BadRequestError,
   UnauthorizedError,
 } = require("../expressError");
 
-const { BCRYPT_WORK_FACTOR } = require("../config.js");
+const { BCRYPT_WORK_FACTOR, jobApplyJsToSql } = require("../config.js");
 
 /** Related functions for users. */
 
@@ -102,17 +104,48 @@ class User {
    **/
 
   static async findAll() {
-    const result = await db.query(
-          `SELECT username,
-                  first_name AS "firstName",
-                  last_name AS "lastName",
-                  email,
-                  is_admin AS "isAdmin"
-           FROM users
-           ORDER BY username`,
+    // ADDED LINE 108-149.
+    const joinQuery = await db.query(
+      `SELECT u.username,
+          u.first_name AS "firstName",
+          u.last_name AS "lastName",
+          u.email,
+          u.is_admin AS "isAdmin",
+          a.job_id AS "jobId"
+          FROM users u
+          FULL JOIN applications a ON u.username = a.username
+          ORDER BY u.username
+      `
     );
 
-    return result.rows;
+    const joinRows = joinQuery.rows;
+    const parsedUsernames = [];
+    const joinDataMap = new Map();
+
+    for (let data of joinRows) {
+      if (parsedUsernames.indexOf(data.username) === -1) {
+
+        parsedUsernames.push(data.username);
+
+        const objFromData = {
+          username: data.username,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.email,
+          isAdmin: data.isAdmin,
+          jobs: [ data.jobId ]
+        }
+
+        joinDataMap.set(data.username, objFromData);
+
+      } else if (parsedUsernames.indexOf(data.username) !== -1) {
+        joinDataMap.get(data.username).jobs.push(data.jobId);
+      }
+    }
+
+    parsedUsernames.length = 0;
+    const users = Object.fromEntries(joinDataMap);
+    return users;
   }
 
   /** Given a username, return data about user.
@@ -123,6 +156,7 @@ class User {
    * Throws NotFoundError if user not found.
    **/
 
+  // ADDED LINE 175-184.
   static async get(username) {
     const userRes = await db.query(
           `SELECT username,
@@ -132,14 +166,23 @@ class User {
                   is_admin AS "isAdmin"
            FROM users
            WHERE username = $1`,
-        [username],
+        [username]
     );
 
     const user = userRes.rows[0];
-
     if (!user) throw new NotFoundError(`No user: ${username}`);
 
-    return user;
+    const jobsRes = await db.query(
+      `SELECT a.job_id AS "jobId"
+       FROM users u
+       JOIN applications a ON u.username = a.username
+       WHERE a.username = $1`,
+        [username],
+    );
+
+    const appRows = jobsRes.rows;
+    const jobs = appRows.map((obj)=> obj.jobId);
+    return { user, jobs };
   }
 
   /** Update user data with `data`.
@@ -204,6 +247,36 @@ class User {
     const user = result.rows[0];
 
     if (!user) throw new NotFoundError(`No user: ${username}`);
+  }
+
+  /** Given a username and job id, apply to a job.
+   *
+   * Returns { job id }
+   *
+   * Throws NotFoundError if user or job not found.
+   **/
+  static async jobApply(reqBody) {
+    const reqUsername = reqBody.username;
+    const reqId = reqBody.id;
+    await User.get(reqUsername);
+    await Job.getById(reqId);
+    await Application.appliedAlready(reqId, reqUsername);
+
+    const { setCols, pgValues, valuesArr } = sqlForJobInsert(
+      reqBody,
+      jobApplyJsToSql
+    );
+
+    const sqlQuery = `
+      INSERT INTO applications
+      ${setCols} VALUES ${pgValues}
+      RETURNING job_id
+    `;
+
+    const result = await db.query(sqlQuery, [...valuesArr]);
+    const id = result.rows[0].job_id;
+
+    return id;
   }
 }
 

@@ -9,7 +9,7 @@ const {
 } = require("../helpers/sql");
 
 const { jobJsToSql, jobFilterJsToSql, CAST } = require("../config.js");
-/** Related functions for companies. */
+/** Related functions for jobs. */
 
 class Job {
   /** Create a job (from data), update db, return new job data.
@@ -102,6 +102,30 @@ class Job {
 
     const jobResults = { jobs, company };
     return jobResults;
+  }
+
+
+  // /** Given a job id, return a job.
+  //  *
+  //  * Returns { id, title, salary, equity, companyHandle }
+  //  *
+  //  * Throws NotFoundError if not found.
+  //  **/
+
+  static async getById(id) {
+    const jobRes = await db.query(
+      `SELECT id, title, salary,
+        company_handle AS "companyHandle",
+        ${CAST}
+        FROM jobs WHERE id = $1`,
+          [id]
+    );
+
+    const job = jobRes.rows;
+    if (job.length === 0) throw new NotFoundError(`No job id: ${id}`);
+
+    const jobResult = { job };
+    return jobResult;
   }
 
   // /** Update job data with `data`.

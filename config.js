@@ -55,7 +55,15 @@ const jobFilterJsToSql = {
   hasEquity: "equity !="
 }
 
-// ADDED LINE 60
+// ADDED LINE 61-64.
+// This gets passed into sqlForJobFilter,
+// /models/job.js, Line 159.
+const jobApplyJsToSql = {
+  username: "username",
+  id: "job_id"
+}
+
+// ADDED LINE 68
 // It gets used to transform numeric column data types to numbers.
 const CAST = "CAST(equity AS REAL)";
 
@@ -66,6 +74,7 @@ module.exports = {
   coFilterJsToSql,
   jobJsToSql,
   jobFilterJsToSql,
+  jobApplyJsToSql,
   getDatabaseUri,
   CAST
 };

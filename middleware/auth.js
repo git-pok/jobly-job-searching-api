@@ -58,7 +58,6 @@ function ensureCurrUserOrAdmin(req, res, next) {
     const userParams = req.params.username;
     const resUserObj = res.locals.user;
     const user = resUserObj ? res.locals.user.username : false;
-    console.log("USER", user);
     const isCurrUser = userParams === user;
     const admin = user ? res.locals.user.isAdmin : false;
     if (!user) throw new UnauthorizedError();
