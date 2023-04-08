@@ -55,6 +55,10 @@ const jobFilterJsToSql = {
   hasEquity: "equity !="
 }
 
+// ADDED LINE 60
+// It gets used to transform numeric column data types to numbers.
+const CAST = "CAST(equity AS REAL)";
+
 module.exports = {
   SECRET_KEY,
   PORT,
@@ -62,5 +66,6 @@ module.exports = {
   coFilterJsToSql,
   jobJsToSql,
   jobFilterJsToSql,
-  getDatabaseUri
+  getDatabaseUri,
+  CAST
 };

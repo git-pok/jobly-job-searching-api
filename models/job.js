@@ -8,7 +8,7 @@ const {
   verifyJobQryParams
 } = require("../helpers/sql");
 
-const { jobJsToSql, jobFilterJsToSql } = require("../config.js");
+const { jobJsToSql, jobFilterJsToSql, CAST } = require("../config.js");
 /** Related functions for companies. */
 
 class Job {
@@ -20,7 +20,9 @@ class Job {
    *
    * Throws BadRequestError if job already in database.
    * */
-
+  // Note, the PostgreSQL jobs table doesn't have any
+  // constraints preventing duplicate job titles being
+  // createing for each company. Job.create() does.
   static async create({ title, salary, equity, companyHandle }) {
     const duplicateCheck = await db.query(
           `SELECT company_handle
@@ -35,7 +37,8 @@ class Job {
           `INSERT INTO jobs
            (title, salary, equity, company_handle)
            VALUES ($1, $2, $3, $4)
-           RETURNING title, salary, equity, company_handle AS "companyHandle"`,
+           RETURNING title, salary, ${CAST},
+           company_handle AS "companyHandle"`,
         [
           title,
           salary,
@@ -58,7 +61,7 @@ class Job {
     const jobsRes = await db.query(
           `SELECT title, salary,
             company_handle AS "companyHandle",
-            CAST(equity AS DOUBLE PRECISION)
+            ${CAST}
             FROM jobs
             ORDER BY title`);
     const rows = jobsRes.rows;
@@ -89,7 +92,7 @@ class Job {
     const jobsRes = await db.query(
           `SELECT id, title, salary,
           company_handle AS "companyHandle",
-          CAST(equity AS DOUBLE PRECISION)
+          ${CAST}
           FROM jobs WHERE company_handle = $1
           ORDER BY title`,
         [handle]);
@@ -126,7 +129,7 @@ class Job {
                       WHERE id = ${idVarIdx} 
                       RETURNING title, 
                                 salary, 
-                                equity, 
+                                ${CAST}, 
                                 company_handle AS "companyHandle"`;
     const result = await db.query(querySql, [...values, id]);
     const job = result.rows[0];
@@ -166,8 +169,9 @@ class Job {
         jobFilterJsToSql
         );
     // This creates the entire query that gets passed into db.query.
-    const querySql = `SELECT id, title, salary, company_handle,
-                        CAST(equity AS DOUBLE PRECISION) FROM jobs 
+    const querySql = `SELECT id, title, salary,
+                        company_handle AS "companyHandle",
+                        ${CAST} FROM jobs 
                         WHERE ${setCols} ORDER BY title 
                       `;                      
     // This is the actual pg query.

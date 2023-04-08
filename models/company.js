@@ -4,7 +4,7 @@ const db = require("../db");
 const { BadRequestError, NotFoundError, ExpressError } = require("../expressError");
 const { sqlForPartialUpdate, sqlForCoFilter, verifyQryParams } = require("../helpers/sql");
 // ADDED LINE 7.
-const { coFilterJsToSql } = require("../config.js");
+const { coFilterJsToSql, CAST } = require("../config.js");
 /** Related functions for companies. */
 
 class Company {
@@ -88,7 +88,7 @@ class Company {
     const jobsRes = await db.query(
         `SELECT id, title, salary,
           company_handle AS "companyHandle",
-          CAST(equity AS DOUBLE PRECISION)
+          ${CAST}
         FROM jobs WHERE company_handle = $1
         ORDER BY title`,
         [handle]);

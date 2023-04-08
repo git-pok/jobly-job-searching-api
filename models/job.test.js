@@ -26,7 +26,7 @@ describe("Job.create()", function () {
     companyHandle: "c1",
     title: "Job Test",
     salary: 200000,
-    equity: "0.8"
+    equity: 0.8
   };
 
   test("create a job", async function () {
@@ -140,7 +140,7 @@ describe("Job.update()", function () {
       companyHandle: "c1",
       title: "Software Programmer",
       salary: 250000,
-      equity: "0"
+      equity: 0
     });
 
     const result = await db.query(
@@ -170,7 +170,7 @@ describe("Job.update()", function () {
       companyHandle: "c1",
       title: "Programmer",
       salary: null,
-      equity: "0"
+      equity: 0
     });
 
     const result = await db.query(
@@ -240,7 +240,7 @@ describe('Job.jobFilter()', ()=> {
 
     const resData = [{  
       id,  
-      company_handle: "c1",
+      companyHandle: "c1",
       title: "Programmer",
       salary: 200000,
       equity: 0
@@ -259,7 +259,7 @@ describe('Job.jobFilter()', ()=> {
     const resData = [
       {
         id,  
-        company_handle: "c3",
+        companyHandle: "c3",
         title: "Back End Engineer",
         salary: 250000,
         equity: 0.8
@@ -282,7 +282,7 @@ describe('Job.jobFilter()', ()=> {
     const resData = [
       {
         id,  
-        company_handle: "c3",
+        companyHandle: "c3",
         title: "Back End Engineer",
         salary: 250000,
         equity: 0.8

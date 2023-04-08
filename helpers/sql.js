@@ -116,7 +116,7 @@ function verifyJobQryParams(qryObj) {
 // { hasEquity: "false" } => {}.
 function hasEquityFilter(qryObj) {
   if (qryObj.hasEquity) {
-    const qryProp = qryObj.hasEquity;
+    const qryProp = qryObj.hasEquity.replaceAll(' ', '').toLowerCase();
     if (qryProp === 'true') {
       qryObj.hasEquity = 0;
     } if (qryProp === 'false') {

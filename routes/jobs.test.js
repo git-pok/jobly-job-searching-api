@@ -52,7 +52,7 @@ describe("POST /jobs", function () {
         "companyHandle": "c1",
         "title": "Job Test",
         "salary": 200000,
-        "equity": "0.8"
+        "equity": 0.8
       }
     });
   });
@@ -144,7 +144,7 @@ describe('/GET /jobs?', ()=> {
 
     const job = [{
       id,
-      company_handle: "c1",
+      companyHandle: "c1",
       title: "Programmer",
       salary: 200000,
       equity: 0
@@ -163,14 +163,14 @@ describe('/GET /jobs?', ()=> {
 
     const jobs = [{
       id: id3,
-      company_handle: "c3",
+      companyHandle: "c3",
       title: "Full Stack Developer",
       salary: 300000,
       equity: 0.8
     },
     {
       id: id2,
-      company_handle: "c2",
+      companyHandle: "c2",
       title: "Software Engineer",
       salary: 250000,
       equity: 0.4
@@ -187,7 +187,7 @@ describe('/GET /jobs?', ()=> {
 
     const jobs = {
       id,
-      company_handle: "c1",
+      companyHandle: "c1",
       title: "Programmer",
       salary: 200000,
       equity: 0
@@ -276,7 +276,7 @@ describe("PATCH /jobs/:id", function () {
         companyHandle: "c1",
         title: "Software Programmer",
         salary: 200000,
-        equity: "0"
+        equity: 0
       },
     });
   });
