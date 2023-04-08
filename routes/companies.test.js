@@ -12,7 +12,9 @@ const {
   commonAfterEach,
   commonAfterAll,
   u1Token,
-  u4Token
+  u4Token,
+  job1Id,
+  job2Id
 } = require("./_testCommon");
 
 beforeAll(commonBeforeAll);
@@ -68,7 +70,7 @@ describe("POST /companies", function () {
 /************************************** GET /companies */
 
 describe("GET /companies", function () {
-  test("ok for anon", async function () {
+  test("get companies: works for all users", async function () {
     const resp = await request(app).get("/companies");
     expect(resp.body).toEqual({
       companies:
@@ -94,6 +96,13 @@ describe("GET /companies", function () {
               numEmployees: 3,
               logoUrl: "http://c3.img",
             },
+            {
+              handle: "c4",
+              name: "C4",
+              description: "Desc4",
+              numEmployees: 4,
+              logoUrl: "http://c4.img",
+            }
           ],
     });
   });
@@ -145,8 +154,16 @@ describe('/GET /companies?', ()=> {
       num_employees: 3,
       logo_url: "http://c3.img",
     };
+
+    const co4 = {
+      handle: "c4",
+      name: "C4",
+      description: "Desc4",
+      num_employees: 4,
+      logo_url: "http://c4.img",
+    }
     
-    expect(res.body).toEqual( [ co2, co3 ] );
+    expect(res.body).toEqual( [ co2, co3, co4 ] );
   });
 
   test('Query with name, minEmployees, and maxEmployees filter', async ()=> {
@@ -178,6 +195,8 @@ describe('/GET /companies?', ()=> {
 
 describe("GET /companies/:handle", function () {
   test("works for anon", async function () {
+    const id = await job1Id();
+
     const resp = await request(app).get(`/companies/c1`);
     expect(resp.body).toEqual({
       company: {
@@ -186,11 +205,21 @@ describe("GET /companies/:handle", function () {
         description: "Desc1",
         numEmployees: 1,
         logoUrl: "http://c1.img",
-      }, jobs: []
+      }, jobs: [
+        {
+          id,
+          companyHandle: "c1",
+          title: "Programmer",
+          salary: 200000,
+          equity: 0
+        }
+      ]
     });
   });
 
   test("works for anon: company w/o jobs", async function () {
+    const id = await job2Id();
+
     const resp = await request(app).get(`/companies/c2`);
     expect(resp.body).toEqual({
       company: {
@@ -199,7 +228,15 @@ describe("GET /companies/:handle", function () {
         description: "Desc2",
         numEmployees: 2,
         logoUrl: "http://c2.img",
-      }, jobs: []
+      }, jobs: [
+        {
+          id,
+          companyHandle: "c2",
+          title: "Software Engineer",
+          salary: 250000,
+          equity: 0.4
+        }
+      ]
     });
   });
 

@@ -1,9 +1,13 @@
 "use strict";
-
+// CREATED ALL LOGIC IN THIS FILE.
 const db = require("../db");
 const { BadRequestError, NotFoundError, ExpressError } = require("../expressError");
-const { sqlForPartialUpdate, sqlForJobFilter, verifyJobQryParams } = require("../helpers/sql");
-// ADDED LINE 7.
+
+const { 
+  sqlForPartialUpdate, sqlForJobFilter,
+  verifyJobQryParams
+} = require("../helpers/sql");
+
 const { jobJsToSql, jobFilterJsToSql } = require("../config.js");
 /** Related functions for companies. */
 

@@ -3,6 +3,7 @@
 const db = require("../db.js");
 const User = require("../models/user");
 const Company = require("../models/company");
+const Job = require("../models/job.js");
 const { createToken } = require("../helpers/tokens");
 
 async function commonBeforeAll() {
@@ -35,6 +36,15 @@ async function commonBeforeAll() {
         description: "Desc3",
         logoUrl: "http://c3.img",
       });
+  // ADDED LINE 40-47.
+  await Company.create(
+    {
+      handle: "c4",
+      name: "C4",
+      numEmployees: 4,
+      description: "Desc4",
+      logoUrl: "http://c4.img",
+    });
 
   await User.register({
     username: "u1",
@@ -60,7 +70,7 @@ async function commonBeforeAll() {
     password: "password3",
     isAdmin: false,
   });
-  // ADDED LINE 64-71.
+  // ADDED LINE 74-103.
   await User.register({
     username: "u4",
     firstName: "U4F",
@@ -69,6 +79,27 @@ async function commonBeforeAll() {
     password: "password4",
     isAdmin: true,
   });
+  await Job.create(
+    {
+      companyHandle: "c1",
+      title: "Programmer",
+      salary: 200000,
+      equity: 0
+    });
+  await Job.create(
+    {
+      companyHandle: "c2",
+      title: "Software Engineer",
+      salary: 250000,
+      equity: 0.4
+    });
+  await Job.create(
+    {
+      companyHandle: "c3",
+      title: "Full Stack Developer",
+      salary: 300000,
+      equity: 0.8
+    });
 }
 
 async function commonBeforeEach() {
@@ -85,8 +116,39 @@ async function commonAfterAll() {
 
 
 const u1Token = createToken({ username: "u1", isAdmin: false });
-// ADDED LINE 89.
+// ADDED LINE 120.
 const u4Token = createToken({ username: "u4", isAdmin: true });
+
+// ADDED LINE 123-151.
+async function job1Id() {
+  const c1Id = await db.query(
+    `SELECT id FROM jobs WHERE title = 'Programmer'`
+  );
+
+  const [ { id } ] = c1Id.rows;
+
+  return id;
+}
+
+async function job2Id() {
+  const c2Id = await db.query(
+    `SELECT id FROM jobs WHERE title = 'Software Engineer'`
+  );
+
+  const [ { id } ] = c2Id.rows;
+
+  return id;
+}
+
+async function job3Id() {
+  const c3Id = await db.query(
+    `SELECT id FROM jobs WHERE title = 'Full Stack Developer'`
+  );
+
+  const [ { id } ] = c3Id.rows;
+
+  return id;
+}
 
 
 module.exports = {
@@ -95,5 +157,8 @@ module.exports = {
   commonAfterEach,
   commonAfterAll,
   u1Token,
-  u4Token
+  u4Token,
+  job1Id,
+  job2Id,
+  job3Id
 };

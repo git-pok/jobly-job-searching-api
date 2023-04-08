@@ -3,7 +3,7 @@
 const jsonschema = require("jsonschema");
 const express = require("express");
 const { handleOrIdParse } = require('../helpers/parse.js');
-
+const { verifyCreateJobParams } = require('../helpers/sql.js');
 const { BadRequestError } = require("../expressError");
 const { ensureLoggedIn, ensureLoggedInAndAdmin } = require("../middleware/auth");
 const Job = require("../models/job.js");
@@ -12,22 +12,6 @@ const jobNewSchema = require("../schemas/jobNew.json");
 const jobUpdateSchema = require("../schemas/jobUpdate.json");
 
 const router = new express.Router();
-
-// TEST ROUTE
-// router.get("/", async function (req, res, next) {
-//   try {
-//     console.log("JOB", Job);
-//     const resp = await db.query(`
-//       SELECT id, title, salary, company_handle,
-//       CAST(equity AS DOUBLE PRECISION)
-//       FROM jobs ORDER BY equity DESC;
-//     `);
-//     // return res.json({ msg: "Updating!" });
-//     return res.json({ "resp": resp.rows });
-//   } catch (err) {
-//     return next(err);
-//   }
-// });
 
 /** POST / { job } =>  { job }
  *
@@ -39,15 +23,20 @@ const router = new express.Router();
  */
 router.post("/", ensureLoggedInAndAdmin, async function (req, res, next) {
   try {
-    const reqBody = req.body; 
+    const reqBody = req.body;
+    const verifyJobJsonObj = verifyCreateJobParams(reqBody);
+    if (verifyJobJsonObj === false)
+      throw new BadRequestError('Invalid body property.');
+
     const validator = jsonschema.validate(reqBody, jobNewSchema);
+    
     if (!validator.valid) {
       const errs = validator.errors.map(e => e.stack);
       throw new BadRequestError(errs);
+    } else {
+      const job = await Job.create(reqBody);
+      return res.status(201).json({ job });
     }
-
-    const job = await Job.create(reqBody);
-    return res.status(201).json({ job });
   } catch (err) {
     return next(err);
   }

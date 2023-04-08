@@ -10,6 +10,7 @@ const {
   commonBeforeEach,
   commonAfterEach,
   commonAfterAll,
+  job1Id
 } = require("./_testCommon");
 
 beforeAll(commonBeforeAll);
@@ -85,6 +86,13 @@ describe("findAll", function () {
         numEmployees: 3,
         logoUrl: "http://c3.img",
       },
+      {
+        handle: "c4",
+        name: "C4",
+        description: "Desc4",
+        numEmployees: 4,
+        logoUrl: "http://c4.img",
+      }
     ]);
   });
 });
@@ -93,7 +101,10 @@ describe("findAll", function () {
 
 describe("get", function () {
   test("works", async function () {
+    const id = await job1Id();
+
     let company = await Company.get("c1");
+    
     expect(company).toEqual({
       company: {
         handle: "c1",
@@ -101,7 +112,15 @@ describe("get", function () {
         description: "Desc1",
         numEmployees: 1,
         logoUrl: "http://c1.img",
-      }, jobs: []
+      }, jobs: [
+        {
+          id,
+          companyHandle: "c1",
+          title: "Programmer",
+          salary: 200000,
+          equity: 0
+        }
+      ]
     });
   });
 

@@ -3,7 +3,7 @@
 process.env.NODE_ENV = 'test';
 
 const db = require("../db.js");
-const { BadRequestError, NotFoundError, ExpressError } = require("../expressError");
+const { BadRequestError, NotFoundError } = require("../expressError");
 const Job = require("./job.js");
 const {
   commonBeforeAll,

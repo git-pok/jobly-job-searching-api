@@ -159,6 +159,20 @@ function sqlForJobFilter(dataToQuery, qryToSql) {
   };
 }
 
+// ADDED LINE 167-174
+// This verfies there are no json parameters that
+// our logic doesn't solve for.
+// {"title": "prog", "salary": 200} => true
+// {"title": "wall", "wrongParam": 200} => false
+function verifyCreateJobParams(qryObj) {
+  const qryFilters = [
+    "title", "salary", "equity", "companyHandle"
+  ];
+  const keys = Object.keys(qryObj);
+  const verifyFilters = keys.every((val)=> qryFilters.indexOf(val) !== -1);
+  return verifyFilters;
+}
+
 module.exports = {
   sqlForPartialUpdate,
   sqlForCoFilter,
@@ -166,5 +180,6 @@ module.exports = {
   verifyMinMaxEmps,
   verifyQryParams,
   verifyJobQryParams,
-  sqlForJobFilter
+  sqlForJobFilter,
+  verifyCreateJobParams
 };
