@@ -5,13 +5,16 @@ const {
   BadRequestError,
   UnauthorizedError,
 } = require("../expressError");
+
 const db = require("../db.js");
 const User = require("./user.js");
+
 const {
   commonBeforeAll,
   commonBeforeEach,
   commonAfterEach,
   commonAfterAll,
+  job1Id
 } = require("./_testCommon");
 
 beforeAll(commonBeforeAll);
@@ -110,22 +113,24 @@ describe("register", function () {
 describe("findAll", function () {
   test("works", async function () {
     const users = await User.findAll();
-    expect(users).toEqual([
-      {
+    expect(users).toEqual({
+      u1: {
         username: "u1",
         firstName: "U1F",
         lastName: "U1L",
         email: "u1@email.com",
         isAdmin: false,
+        jobs: [ null ]
       },
-      {
+      u2: {
         username: "u2",
         firstName: "U2F",
         lastName: "U2L",
         email: "u2@email.com",
         isAdmin: false,
+        jobs: [ null ]
       },
-    ]);
+    });
   });
 });
 
@@ -135,11 +140,14 @@ describe("get", function () {
   test("works", async function () {
     let user = await User.get("u1");
     expect(user).toEqual({
-      username: "u1",
-      firstName: "U1F",
-      lastName: "U1L",
-      email: "u1@email.com",
-      isAdmin: false,
+      user: {
+        username: "u1",
+        firstName: "U1F",
+        lastName: "U1L",
+        email: "u1@email.com",
+        isAdmin: false,
+      },
+      jobs: []
     });
   });
 
@@ -225,6 +233,48 @@ describe("remove", function () {
       fail();
     } catch (err) {
       expect(err instanceof NotFoundError).toBeTruthy();
+    }
+  });
+});
+
+/************************************** User.jobApply() */
+// ADDED LINE 242-280.
+describe("User.jobApply()", function () {
+  test("apply to a job", async function () {
+    const jobId = await job1Id();
+    const reqParams = { username: "u1", id: jobId };
+    const reqBody = { username: "u1", jobId };
+
+    await User.jobApply(reqParams, reqBody);
+
+    const res = await db.query(
+        `SELECT * FROM applications WHERE username='u1'`
+    );
+
+    expect(res.rows.length).toEqual(1);
+  });
+
+  test("BadRequestError for duplicate job", async function () {
+    try {
+      const jobId = await job1Id();
+      const reqParams = { username: "u1", id: jobId };
+      const reqBody = { username: "u1", jobId };
+      
+      await User.jobApply(reqParams, reqBody);
+      await User.jobApply(reqParams, reqBody);
+      
+      fail();
+    } catch (err) {
+      expect(err instanceof BadRequestError).toBeTruthy();
+    }
+  });
+
+  test("BadRequestError for no data", async function () {
+    try {
+      await User.jobApply();
+      fail();
+    } catch (err) {
+      expect(err instanceof BadRequestError).toBeTruthy();
     }
   });
 });

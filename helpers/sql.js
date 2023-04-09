@@ -27,7 +27,7 @@ function sqlForPartialUpdate(dataToUpdate, jsToSql) {
   };
 }
 
-// ADDED LINE 31-59
+// ADDED LINE 31-59.
 function sqlForCoFilter(dataToQuery, qryToSql) {
   const nameProp = dataToQuery.name;
   // If name in query, this wraps its value in %%,
@@ -58,7 +58,7 @@ function sqlForCoFilter(dataToQuery, qryToSql) {
   };
 }
 
-// ADDED LINE 62-74
+// ADDED LINE 67-74.
 // This takes the minEmployees and maxEmployees
 // values from the query object and turns them
 // into numbers.
@@ -73,7 +73,7 @@ function strToNum(qryObj) {
   return newObj;
 }
 
-// ADDED LINE 77-84
+// ADDED LINE 79-84.
 // This verifies the minEmployees value is
 // never greater than the maxEmployees value. 
 function verifyMinMaxEmps(qryObj) {
@@ -83,7 +83,7 @@ function verifyMinMaxEmps(qryObj) {
   if (minEmps > maxEmps) throw new ExpressError("minEmployees cannot be greater than maxEmployees", 400);
 }
 
-// ADDED LINE 91-96
+// ADDED LINE 91-96.
 // This verfies there are no query parameters that
 // our logic doesn't solve for.
 // {"name": "wall", "minEmployees": 200} => true
@@ -95,7 +95,7 @@ function verifyQryParams(qryObj) {
   return verifyFilters;
 }
 
-// ADDED LINE 103-108
+// ADDED LINE 103-108.
 // This verfies there are no query parameters that
 // our logic doesn't solve for.
 // {"title": "wall", "minSalary": 200} => true
@@ -159,7 +159,7 @@ function sqlForJobFilter(dataToQuery, qryToSql) {
   };
 }
 
-// ADDED LINE 167-174
+// ADDED LINE 167-175.
 // This verfies there are no json parameters that
 // our logic doesn't solve for.
 // {"title": "prog", "salary": 200} => true
@@ -168,12 +168,13 @@ function verifyCreateJobParams(qryObj) {
   const qryFilters = [
     "title", "salary", "equity", "companyHandle"
   ];
+
   const keys = Object.keys(qryObj);
   const verifyFilters = keys.every((val)=> qryFilters.indexOf(val) !== -1);
   return verifyFilters;
 }
 
-// ADDED LINE 177-1
+// ADDED LINE 187-217.
 // This accepts an object of data to be queried for
 // and an object of sql commands, and returns an object
 // that has sql insert statements, sql insert values

@@ -13,6 +13,7 @@ const {
   commonAfterAll,
   u1Token,
   u4Token,
+  job1Id
 } = require("./_testCommon");
 
 beforeAll(commonBeforeAll);
@@ -97,6 +98,60 @@ describe("POST /users", function () {
   });
 });
 
+/************************************** POST /users/:username/jobs/:id  */
+// ADDED LINE 103-153.
+describe("POST /users/:username/jobs/:id ", function () {
+  test("create a job app: works for current user or admin", async function () {
+    const jobId = await job1Id();
+
+    const resp = await request(app)
+        .post(`/users/u1/jobs/${jobId}`)
+        .send({username: "u1", jobId })
+        .set("authorization", `Bearer ${u4Token}`);
+      
+    expect(resp.statusCode).toEqual(201);
+
+    expect(resp.body).toEqual({ applied: jobId });
+  });
+
+  test("401 status code for unauthorized user", async function () {
+    const jobId = await job1Id();
+
+    const resp = await request(app)
+        .post(`/users/u4/jobs/${jobId}`)
+        .set("authorization", `Bearer ${u1Token}`);
+      
+    expect(resp.statusCode).toEqual(401);
+  });
+
+  test("400 status code for invalid json schema", async function () {
+    const jobId = await job1Id();
+
+    const resp = await request(app)
+        .post(`/users/u1/jobs/${jobId}`)
+        .send({username: "u1", jobId: `${jobId}` })
+        .set("authorization", `Bearer ${u4Token}`);
+      
+    expect(resp.statusCode).toEqual(400);
+  });
+
+  test("400 status code for duplicate", async function () {
+    const jobId = await job1Id();
+
+    const resp = await request(app)
+        .post(`/users/u1/jobs/${jobId}`)
+        .send({username: "u1", jobId })
+        .set("authorization", `Bearer ${u4Token}`);
+
+    const dupResp = await request(app)
+        .post(`/users/u1/jobs/${jobId}`)
+        .send({username: "u1", jobId })
+        .set("authorization", `Bearer ${u4Token}`);
+      
+    expect(dupResp.statusCode).toEqual(400);
+  });
+});
+
 /************************************** GET /users */
 // ADDED CODE: Adjusted tests for the Part 3 User middleware.
 describe("GET /users", function () {
@@ -142,8 +197,8 @@ describe("GET /users", function () {
       },
     });
   });
-  // ADDED LINE 146-151.
-  test("returns 401 status for non admin/current user", async function () {
+  // ADDED LINE 201-206.
+  test("401 status for non admin/current user", async function () {
     const resp = await request(app)
         .get("/users")
         .set("authorization", `Bearer ${u1Token}`);
@@ -189,7 +244,7 @@ describe("GET /users/:username", function () {
     });   
   });
 
-  // ADDED LINE 193-208.
+  // ADDED LINE 248-271.
   test("works for admin user", async function () {
     const resp = await request(app)
         .get(`/users/u1`)
@@ -207,7 +262,7 @@ describe("GET /users/:username", function () {
     });   
   });
 
-  test("returns 401 status for non admin/current user", async function () {
+  test("401 status for non admin/current user", async function () {
     const resp = await request(app)
         .get(`/users/u2`)
         .set("authorization", `Bearer ${u1Token}`);
@@ -249,7 +304,7 @@ describe("PATCH /users/:username", () => {
       },
     });
   });
-  // ADDED LINE 253-280.
+  // ADDED LINE 308-335.
   test("works for admin", async function () {
     const resp = await request(app)
         .patch(`/users/u2`)
@@ -268,7 +323,7 @@ describe("PATCH /users/:username", () => {
     });
   });
 
-  test("returns 401 status for non admin/current user", async function () {
+  test("401 status for non admin/current user", async function () {
     const resp = await request(app)
         .patch(`/users/u2`)
         .send({
@@ -339,15 +394,15 @@ describe("DELETE /users/:username", function () {
 
     expect(resp.body).toEqual({ deleted: "u1" });
   });
-  // ADDED LINE 343-356.
-  test("works for admin", async function () {
+  // ADDED LINE 398-411.
+  test("delete user: works for admin", async function () {
     const resp = await request(app)
         .delete(`/users/u1`)
         .set("authorization", `Bearer ${u4Token}`);
     expect(resp.body).toEqual({ deleted: "u1" });
   });
 
-  test("returns 401 status for non admin/current user", async function () {
+  test("401 status code for non admin/current user", async function () {
     const resp = await request(app)
         .delete(`/users/u2`)
         .set("authorization", `Bearer ${u1Token}`);

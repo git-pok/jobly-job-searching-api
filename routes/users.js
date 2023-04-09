@@ -11,6 +11,7 @@ const User = require("../models/user");
 const { createToken } = require("../helpers/tokens");
 const userNewSchema = require("../schemas/userNew.json");
 const userUpdateSchema = require("../schemas/userUpdate.json");
+const jobApplySchema = require("../schemas/jobApply.json");
 
 const router = express.Router();
 
@@ -50,10 +51,18 @@ router.post("/", async function (req, res, next) {
  *
  * Authorization required: current user or admin.
  **/
+// ADDED LINE 55-70.
 router.post("/:username/jobs/:id", ensureCurrUserOrAdmin, async (req, res, next)=> {
   try {
-    const reqParams = req.params; 
-    const apply = await User.jobApply(reqParams);
+    const reqBody = req.body;
+    const reqParams = req.params;
+    const validator = jsonschema.validate(reqBody, jobApplySchema);
+
+    if (!validator.valid) {
+      const errs = validator.errors.map(e => e.stack);
+      throw new BadRequestError(errs);
+    }
+    const apply = await User.jobApply(reqParams, reqBody);
     return res.status(201).json({ applied: apply });
   } catch(err) {
     return next(err);
@@ -66,7 +75,7 @@ router.post("/:username/jobs/:id", ensureCurrUserOrAdmin, async (req, res, next)
  *
  * Authorization required: logged in and admin.
  **/
-// ADDED ensureLoggedInAndAdmin IN LINE 70
+// ADDED ensureLoggedInAndAdmin IN LINE 79.
 router.get("/", ensureLoggedInAndAdmin, async function (req, res, next) {
   try {
     const users = await User.findAll();
@@ -83,7 +92,7 @@ router.get("/", ensureLoggedInAndAdmin, async function (req, res, next) {
  *
  * Authorization required: current user or admin.
  **/
-// ADDED ensureCurrUserOrAdmin IN LINE 87
+// ADDED ensureCurrUserOrAdmin IN LINE 96.
 router.get("/:username", ensureCurrUserOrAdmin, async function (req, res, next) {
   try {
     const user = await User.get(req.params.username);
@@ -103,7 +112,7 @@ router.get("/:username", ensureCurrUserOrAdmin, async function (req, res, next) 
  *
  * Authorization required: current user or admin.
  **/
-// ADDED ensureCurrUserOrAdmin IN LINE 107
+// ADDED ensureCurrUserOrAdmin IN LINE 116.
 router.patch("/:username", ensureCurrUserOrAdmin, async function (req, res, next) {
   try {
     const validator = jsonschema.validate(req.body, userUpdateSchema);
@@ -124,7 +133,7 @@ router.patch("/:username", ensureCurrUserOrAdmin, async function (req, res, next
  *
  * Authorization required: current user or admin.
  **/
-// ADDED ensureCurrUserOrAdmin IN LINE 128
+// ADDED ensureCurrUserOrAdmin IN LINE 137.
 router.delete("/:username", ensureCurrUserOrAdmin, async function (req, res, next) {
   try {
     await User.remove(req.params.username);

@@ -60,7 +60,7 @@ const jobFilterJsToSql = {
 // /models/job.js, Line 159.
 const jobApplyJsToSql = {
   username: "username",
-  id: "job_id"
+  jobId: "job_id"
 }
 
 // ADDED LINE 68

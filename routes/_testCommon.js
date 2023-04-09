@@ -70,7 +70,7 @@ async function commonBeforeAll() {
     password: "password3",
     isAdmin: false,
   });
-  // ADDED LINE 74-103.
+  // ADDED LINE 74-102.
   await User.register({
     username: "u4",
     firstName: "U4F",

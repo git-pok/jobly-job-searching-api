@@ -121,8 +121,15 @@ class User {
     const joinRows = joinQuery.rows;
     const parsedUsernames = [];
     const joinDataMap = new Map();
-
+    // This loops over join data and creates a
+    // Map of objects. Each object is for a user,
+    // and contains data from the join.
+    // If theres duplicate data, the logic
+    // adds the jobId data to the user's object,
+    // instead of the jobId and duplicated data.
     for (let data of joinRows) {
+      // If the username doesn't exist in parsedUsernames,
+      // push it to it, and make a user object.
       if (parsedUsernames.indexOf(data.username) === -1) {
 
         parsedUsernames.push(data.username);
@@ -135,9 +142,12 @@ class User {
           isAdmin: data.isAdmin,
           jobs: [ data.jobId ]
         }
-
+        // Set the user object in joinDataMap, set to
+        // a property with the name of the username.
         joinDataMap.set(data.username, objFromData);
-
+        // If the username of the join data object
+        // exists in parsedUsernames, push the jobId data
+        // to its matching Map object's property, jobs.
       } else if (parsedUsernames.indexOf(data.username) !== -1) {
         joinDataMap.get(data.username).jobs.push(data.jobId);
       }
@@ -156,7 +166,7 @@ class User {
    * Throws NotFoundError if user not found.
    **/
 
-  // ADDED LINE 175-184.
+  // ADDED LINE 185-195.
   static async get(username) {
     const userRes = await db.query(
           `SELECT username,
@@ -255,9 +265,11 @@ class User {
    *
    * Throws NotFoundError if user or job not found.
    **/
-  static async jobApply(reqBody) {
-    const reqUsername = reqBody.username;
-    const reqId = reqBody.id;
+  // ADDED LINE 269-292.
+  static async jobApply(reqParams, reqBody) {
+    if (!reqParams || !reqBody) throw new BadRequestError("Data missing.");
+    const reqUsername = reqParams.username;
+    const reqId = reqParams.id;
     await User.get(reqUsername);
     await Job.getById(reqId);
     await Application.appliedAlready(reqId, reqUsername);
