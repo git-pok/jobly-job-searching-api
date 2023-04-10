@@ -52,7 +52,7 @@ async function commonAfterEach() {
 async function commonAfterAll() {
   await db.end();
 }
-// ADDED LINE 56-74.
+// ADDED LINE 56-81.
 async function job1Id() {
   const c1Id = await db.query(
     `SELECT id FROM jobs WHERE title = 'Programmer'`
@@ -73,11 +73,19 @@ async function job3Id() {
   return id;
 }
 
+async function notFoundJobId() {
+  const idsRes = await db.query('SELECT id FROM jobs');
+  const [ { id: id1 }, { id: id2 }, { id: id3 } ] = idsRes.rows;
+  const nonExisId = id1 + id2 + id3 + 1;
+  return nonExisId;
+}
+
 module.exports = {
   commonBeforeAll,
   commonBeforeEach,
   commonAfterEach,
   commonAfterAll,
   job1Id,
-  job3Id
+  job3Id,
+  notFoundJobId
 };

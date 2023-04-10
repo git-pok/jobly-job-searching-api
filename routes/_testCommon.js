@@ -119,7 +119,7 @@ const u1Token = createToken({ username: "u1", isAdmin: false });
 // ADDED LINE 120.
 const u4Token = createToken({ username: "u4", isAdmin: true });
 
-// ADDED LINE 123-151.
+// ADDED LINE 123-158.
 async function job1Id() {
   const c1Id = await db.query(
     `SELECT id FROM jobs WHERE title = 'Programmer'`
@@ -150,6 +150,13 @@ async function job3Id() {
   return id;
 }
 
+async function notFoundJobId() {
+  const idsRes = await db.query('SELECT id FROM jobs');
+  const [ { id: id1 }, { id: id2 }, { id: id3 } ] = idsRes.rows;
+  const nonExisId = id1 + id2 + id3 + 1;
+  return nonExisId;
+}
+
 
 module.exports = {
   commonBeforeAll,
@@ -160,5 +167,6 @@ module.exports = {
   u4Token,
   job1Id,
   job2Id,
-  job3Id
+  job3Id,
+  notFoundJobId
 };

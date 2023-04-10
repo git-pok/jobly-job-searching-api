@@ -1,5 +1,7 @@
 "use strict";
+
 // ADDED ALL LOGIC IN THIS FILE.
+
 process.env.NODE_ENV = 'test';
 
 const db = require("../db.js");
@@ -11,7 +13,8 @@ const {
   commonAfterEach,
   commonAfterAll,
   job1Id,
-  job3Id
+  job3Id,
+  notFoundJobId
 } = require("./_testCommon");
 
 beforeAll(commonBeforeAll);
@@ -19,7 +22,7 @@ beforeEach(commonBeforeEach);
 afterEach(commonAfterEach);
 afterAll(commonAfterAll);
 
-/************************************** create */
+/************************************** Job.create() */
 
 describe("Job.create()", function () {
   const newJob = {
@@ -29,7 +32,7 @@ describe("Job.create()", function () {
     equity: 0.8
   };
 
-  test("create a job", async function () {
+  test("create a job", async ()=> {
     let job = await Job.create(newJob);
     expect(job).toEqual(newJob);
 
@@ -49,7 +52,7 @@ describe("Job.create()", function () {
     ]);
   });
 
-  test("BadRequestError for creating duplicate job", async function () {
+  test("BadRequestError for creating duplicate job", async ()=> {
       try {
         await Job.create(newJob);
         await Job.create(newJob);
@@ -60,11 +63,12 @@ describe("Job.create()", function () {
   });
 });
 
-/************************************** findAll */
+/************************************** Job.findAll() */
 
 describe("Job.findAll()", function () {
-  test("find all jobs", async function () {
+  test("find all jobs", async ()=> {
     let jobs = await Job.findAll();
+
     expect(jobs).toEqual([
       {
         companyHandle: "c3",
@@ -88,10 +92,10 @@ describe("Job.findAll()", function () {
   });
 });
 
-// /************************************** get */
+// /************************************** Job.get() */
 
 describe("Job.get()", function () {
-  test("find jobs for a company", async function () {
+  test("find jobs for a company", async ()=> {
     const id = await job1Id();
 
     let job = await Job.get("c1");
@@ -113,7 +117,7 @@ describe("Job.get()", function () {
     });
   });
 
-  test("NotFound error for not found company", async function () {
+  test("NotFound error for not found company", async ()=> {
     try {
       await Job.get("c7");
       fail();
@@ -123,7 +127,37 @@ describe("Job.get()", function () {
   });
 });
 
-// /************************************** update */
+// /************************************** Job.getById() */
+
+describe("Job.getById()", function () {
+  test("find job", async ()=> {
+    const id = await job1Id();
+
+    let job = await Job.getById(id);
+
+    expect(job).toEqual({
+        job: [{
+          id, 
+          companyHandle: "c1",
+          title: "Programmer",
+          salary: 200000,
+          equity: 0
+      }]
+    });
+  });
+
+  test("NotFoundError for not found job", async ()=> {
+    try {
+      const id = await notFoundJobId();
+      await Job.getById(id);
+      fail();
+    } catch (err) {
+      expect(err instanceof NotFoundError).toBeTruthy();
+    }
+  });
+});
+
+// /************************************** Job.update() */
 
 describe("Job.update()", function () {
   const updateData = {
@@ -131,7 +165,7 @@ describe("Job.update()", function () {
     salary: 250000
   };
 
-  test("update a job", async function () {
+  test("update a job", async ()=> {
     const id = await job1Id();
 
     let job = await Job.update(id, updateData);
@@ -157,7 +191,7 @@ describe("Job.update()", function () {
     }]);
   });
 
-  test("update a job: null fields", async function () {
+  test("update a job: null fields", async ()=> {
     const id = await job1Id();
 
     const updateDataSetNulls = {
@@ -165,7 +199,8 @@ describe("Job.update()", function () {
       salary: null
     };
 
-    let job = await Job.update(id, updateDataSetNulls);
+    const job = await Job.update(id, updateDataSetNulls);
+
     expect(job).toEqual({
       companyHandle: "c1",
       title: "Programmer",
@@ -187,16 +222,17 @@ describe("Job.update()", function () {
     }]);
   });
 
-  test("NotFoundError for a non existing job", async function () {
+  test("NotFoundError for a non existing job", async ()=> {
     try {
-      await Job.update(20, updateData);
+      const id = await notFoundJobId();
+      await Job.update(id, updateData);
       fail();
     } catch (err) {
       expect(err instanceof NotFoundError).toBeTruthy();
     }
   });
 
-  test("BadRequestError for updating with no data", async function () {
+  test("BadRequestError for updating job with no data", async ()=> {
     const id = await job1Id();
 
     try {
@@ -208,10 +244,10 @@ describe("Job.update()", function () {
   });
 });
 
-// /************************************** remove */
+// /************************************** Job.remove() */
 
 describe("Job.remove()", function () {
-  test("delete a job", async function () {
+  test("delete a job", async ()=> {
     const id = await job1Id();
     await Job.remove(id);
 
@@ -223,9 +259,10 @@ describe("Job.remove()", function () {
     expect(res.rows.length).toEqual(0);
   });
 
-  test("BadRequestError for removing a non existing job", async function () {
+  test("BadRequestError for removing a non existing job", async ()=> {
     try {
-      await Job.remove(200);
+      const id = await notFoundJobId();
+      await Job.remove(id);
       fail();
     } catch (err) {
       expect(err instanceof NotFoundError).toBeTruthy();
@@ -233,9 +270,9 @@ describe("Job.remove()", function () {
   });
 });
 
-// /************************************** Part Two: Companies, coFilter */
+// /************************************** Job.jobFilter() */
 describe('Job.jobFilter()', ()=> {
-  test('Query with one filter', async()=> {
+  test('query with one filter', async ()=> {
     const id = await job1Id();
 
     const resData = [{  
@@ -246,14 +283,14 @@ describe('Job.jobFilter()', ()=> {
       equity: 0
     }];
 
-    const data = {"title": "Programmer"};
+    const data = { "title": "Programmer" };
     const res = await Job.jobFilter(data);
     expect(res).toEqual(resData);
   });
 
-  test('Query with two filters', async()=> {
+  test('query with two filters', async ()=> {
     const id = await job3Id();
-    const data = {"minSalary": "200000", "hasEquity": "true"};
+    const data = { "minSalary": "200000", "hasEquity": "true" };
     const res = await Job.jobFilter(data);
 
     const resData = [
@@ -269,7 +306,7 @@ describe('Job.jobFilter()', ()=> {
     expect(res).toEqual(resData);
   });
 
-  test('Query with three filters', async()=> {
+  test('query with three filters', async ()=> {
     const id = await job3Id();
     const data = {
       "minSalary": "200000",
@@ -292,7 +329,7 @@ describe('Job.jobFilter()', ()=> {
     expect(res).toEqual(resData);
   });
 
-  test('NotFoundError for not found job', async()=> {
+  test('NotFoundError for no results', async ()=> {
     try {
       const data = {
         "minSalary": "200000",
@@ -307,9 +344,9 @@ describe('Job.jobFilter()', ()=> {
     }
   });
 
-  test('BadRequestError for invalid filter', async()=> {
+  test('BadRequestError for invalid filter', async ()=> {
     try {
-      const data = {"wrong": "wat"};
+      const data = { "wrong": "wat" };
       await Job.jobFilter(data);
       fail();
     } catch(err) {

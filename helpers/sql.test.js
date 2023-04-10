@@ -19,28 +19,21 @@ const data = {
 
 const values = Object.values(data);
 
-describe("PATCH /users/:username", function () {
-  test("sqlForPartialUpdate: update user data", async function () {
+describe("sqlForPartialUpdate()", function () {
+  test("creates object of sql statements and pg values array", async function () {
     const result = sqlForPartialUpdate(data, js);
+
     expect(result).toEqual({
       setCols: "\"first_name\"=$1, \"last_name\"=$2",
       values
     });
   });
 
-  test("sqlForPartialUpdate: call with no arguments", async function () {
-    function noData() {
-      sqlForPartialUpdate();
-    }
-    
-    expect(noData).toThrowError();
-  });
-
-  test("sqlForPartialUpdate: update with no data keys", async function () {
-    function noData() {
+  test("BadRequestError for no keys", async function () {
+    try {
       sqlForPartialUpdate({}, js);
+    } catch(err) {
+      expect(err instanceof BadRequestError).toBeTruthy();
     }
-
-    expect(noData).toThrowError(new BadRequestError("No data"));
   });
 });

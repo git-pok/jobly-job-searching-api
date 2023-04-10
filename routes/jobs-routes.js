@@ -5,7 +5,7 @@ const express = require("express");
 const { handleOrIdParse } = require('../helpers/parse.js');
 const { verifyCreateJobParams } = require('../helpers/sql.js');
 const { BadRequestError } = require("../expressError");
-const { ensureLoggedIn, ensureLoggedInAndAdmin } = require("../middleware/auth");
+const { ensureLoggedIn, ensureLoggedInAndAdmin } = require("../middleware/auth.js");
 const Job = require("../models/job.js");
 
 const jobNewSchema = require("../schemas/jobNew.json");
@@ -19,9 +19,9 @@ const router = new express.Router();
  *
  * Returns { title, salary, equity, companyHandle }
  *
- * Authorization required: login and admin
+ * Authorization required: logged in and admin.
  */
-router.post("/", ensureLoggedInAndAdmin, async function (req, res, next) {
+router.post("/", ensureLoggedInAndAdmin, async (req, res, next)=> {
   try {
     const reqBody = req.body;
     const verifyJobJsonObj = verifyCreateJobParams(reqBody);
@@ -46,9 +46,9 @@ router.post("/", ensureLoggedInAndAdmin, async function (req, res, next) {
  *   { jobs: [ { title, salary, equity, companyHandle }, ...] }
  *
  * Can filter on provided search filters:
- * - minEmployees
- * - maxEmployees
- * - nameLike (will find case-insensitive, partial matches)
+ * - title (will find case-insensitive, partial matches)
+ * - minSalary
+ * - hasEquity (if true, filter to jobs that provide a non-zero amount)
  *
  * Authorization required: none
  */
@@ -96,7 +96,7 @@ router.get("/:handle", async function (req, res, next) {
 //  *
 //  * Returns { title, salary, equity, companyHandle }
 //  *
-//  * Authorization required: login
+//  * Authorization required: logged in and admin.
 //  */
 
 router.patch("/:id", ensureLoggedInAndAdmin, async function (req, res, next) {
@@ -120,7 +120,7 @@ router.patch("/:id", ensureLoggedInAndAdmin, async function (req, res, next) {
 
 // /** DELETE /[job]  =>  { deleted: job }
 //  *
-//  * Authorization: login
+//  * Authorization: logged in and admin.
 //  */
 router.delete("/:id", ensureLoggedInAndAdmin, async function (req, res, next) {
   try {

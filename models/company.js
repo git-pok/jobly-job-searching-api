@@ -2,10 +2,10 @@
 
 const db = require("../db");
 const { BadRequestError, NotFoundError, ExpressError } = require("../expressError");
-const { sqlForPartialUpdate, sqlForCoFilter, verifyQryParams } = require("../helpers/sql");
+const { sqlForPartialUpdate, sqlForCoFilter, verifyCoQryParams } = require("../helpers/sql");
 // ADDED LINE 7.
 const { coFilterJsToSql, CAST } = require("../config.js");
-/** Related functions for companies. */
+/** Simple Company Class ORM, related functions for companies. */
 
 class Company {
   /** Create a company (from data), update db, return new company data.
@@ -155,8 +155,8 @@ class Company {
   // ADDED LINE 156-177.
   static async coFilter(data) {
     // This verifies all qry params are allowed.
-    const verifyFilters = verifyQryParams(data);
-    if (verifyFilters === false) throw new ExpressError('Invalid filter.', 400);
+    const verifyFilters = verifyCoQryParams(data);
+    if (verifyFilters === false) throw new BadRequestError('Invalid filter.');
     // This creates and destructures the qry statements and pg values array.
     // Look in config.js to see the object passed into sqlForCoFilter.
     const { setCols, values } = sqlForCoFilter(
@@ -171,7 +171,7 @@ class Company {
     // This is the actual pg query.
     const result = await db.query(querySql, [...values]);
     const company = result.rows;
-    if (company.length === 0) throw new ExpressError(`No companies found.`, 404);
+    if (company.length === 0) throw new NotFoundError("No companies found.");
     return company;
   }
 }

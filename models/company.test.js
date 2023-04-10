@@ -231,16 +231,28 @@ describe("remove", function () {
 });
 
 /************************************** Part Two: Companies, coFilter */
-// ADDED LINE 214-268
-describe('Part Two: Companies, coFilter', ()=> {
-  test('Query with one filter', async()=> {
-    const data = {"name": "c1"};
+// ADDED LINE 235-312.
+describe('Company.coFilter()', ()=> {
+  test('query with one filter', async ()=> {
+    const data = { "name": "c1" };
+
     const res = await Company.coFilter(data);
+
+    const resData = [{
+      handle: "c1",
+      name: "C1",
+      description: "Desc1",
+      num_employees: 1,
+      logo_url: "http://c1.img"
+    }];
+
+    expect(res).toEqual(resData);
   });
 
-  test('Query with two filters', async()=> {
-    const data = {"name": "c2", "minEmployees": 2};
+  test('query with two filters', async ()=> {
+    const data = { "name": "c2", "minEmployees": 2 };
     const res = await Company.coFilter(data);
+
     const resData = [
       {
         handle: "c2",
@@ -249,14 +261,15 @@ describe('Part Two: Companies, coFilter', ()=> {
         num_employees: 2,
         logo_url: "http://c2.img",
       }
-    ]
+    ];
     
     expect(res).toEqual(resData);
   });
 
-  test('Query with three filters', async()=> {
-    const data = {"name": "c", "minEmployees": 1, "maxEmployees": 2};
+  test('query with three filters', async ()=> {
+    const data = { "name": "c", "minEmployees": 1, "maxEmployees": 2 };
     const res = await Company.coFilter(data);
+
     const resData = [
       {
         handle: "c1",
@@ -272,18 +285,28 @@ describe('Part Two: Companies, coFilter', ()=> {
         num_employees: 2,
         logo_url: "http://c2.img",
       }
-    ]
+    ];
     
     expect(res).toEqual(resData);
   });
 
-  test('Returns ExpressError for not found company', async()=> {
-    const data = {"name": "wat"};
-    expect(Company.coFilter(data)).rejects.toThrowError(new ExpressError("No companies found."));
+  test('NotFoundError for not found company', async ()=> {
+    try {
+      const data = { "name": "wat" };
+      await Company.coFilter(data);
+      fail();
+    } catch(err) {
+      expect(err instanceof NotFoundError).toBeTruthy();
+    }
   });
 
-  test('Returns ExpressError for invalid filter', async()=> {
-    const data = {"wrong": "wat"};
-    expect(Company.coFilter(data)).rejects.toThrowError(new ExpressError("Invalid filter."));
+  test('BadRequestError for invalid filter', async ()=> {
+    try {
+      const data = { "wrong": "wat" };
+      await Company.coFilter(data);
+      fail();
+    } catch(err) {
+      expect(err instanceof BadRequestError).toBeTruthy();
+    }
   });
 });

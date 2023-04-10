@@ -1,5 +1,7 @@
 "use strict";
+
 // CREATED ALL LOGIC IN THIS FILE.
+
 const db = require("../db");
 const { BadRequestError, NotFoundError, ExpressError } = require("../expressError");
 
@@ -9,7 +11,7 @@ const {
 } = require("../helpers/sql");
 
 const { jobJsToSql, jobFilterJsToSql, CAST } = require("../config.js");
-/** Related functions for jobs. */
+/** Simple Job Class ORM, related functions for jobs. */
 
 class Job {
   /** Create a job (from data), update db, return new job data.
@@ -22,7 +24,7 @@ class Job {
    * */
   // Note, the PostgreSQL jobs table doesn't have any
   // constraints preventing duplicate job titles being
-  // createing for each company. Job.create() does.
+  // created for each company. Job.create() does.
   static async create({ title, salary, equity, companyHandle }) {
     const duplicateCheck = await db.query(
           `SELECT company_handle
@@ -98,7 +100,7 @@ class Job {
         [handle]);
     
     const jobs = jobsRes.rows;
-    // if (!jobs) throw new NotFoundError(`No jobs: ${handle}`);
+
 
     const jobResults = { jobs, company };
     return jobResults;
@@ -130,8 +132,7 @@ class Job {
 
   // /** Update job data with `data`.
   //  *
-  //  * This is a "partial update" --- it's fine if data doesn't contain all the
-  //  * fields; this only changes provided ones.
+  //  * This is a "partial update"
   //  *
   //  * Data can include: { title, salary, equity }
   //  *
@@ -183,7 +184,7 @@ class Job {
   }
 
   static async jobFilter(data) {
-    // This verifies all qry params are allowed.
+    // This verifies all Job filter qry params are allowed.
     const verifyFilters = verifyJobQryParams(data);
     if (verifyFilters === false) throw new BadRequestError('Invalid filter.');
     // This creates and destructures the qry statements and pg values array.

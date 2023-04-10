@@ -15,13 +15,20 @@ const { UnauthorizedError } = require("../expressError");
  * It's not an error if no token was provided or if the token is not valid.
  */
 
+// ADDED DOCUMENTATION.
+// When we make requests to certain routes, we must add a header of
+// { authorization: "Bearer token" }, to be authorzied.
+// authenticateJWT checks for this header, and if it exists
+// and the token is valid,
+// it will set res.locals.user with the jwt payload.
+// Other routes will check for res.locals.user, to authorize users.
+// authenticateJWT runs before every request.
 function authenticateJWT(req, res, next) {
   try {
     const authHeader = req.headers && req.headers.authorization;
     if (authHeader) {
       const token = authHeader.replace(/^[Bb]earer /, "").trim();
       res.locals.user = jwt.verify(token, SECRET_KEY);
-      // console.log('AUTH TOKEN', res.locals.user, 'HEADER', authHeader, "IS ADMIN", res.locals.user.isAdmin);
     }
     return next();
   } catch (err) {
@@ -29,10 +36,10 @@ function authenticateJWT(req, res, next) {
   }
 }
 
-// ADDED LINE 33-48.
+// ADDED LINE 45-55.
 /** Middleware to ensure user is logged in and an admin.
  *
- * If not, raises Unauthorized.
+ * If not, raises UnauthorizedError.
  */
 
 function ensureLoggedInAndAdmin(req, res, next) {
@@ -47,7 +54,7 @@ function ensureLoggedInAndAdmin(req, res, next) {
   }
 }
 
-// ADDED LINE 51-69.
+// ADDED LINE 63-76.
 /** Middleware to ensure user is logged in and an admin or current user.
  *
  * If not, raises Unauthorized.
@@ -70,7 +77,7 @@ function ensureCurrUserOrAdmin(req, res, next) {
 
 /** Middleware to use when they must be logged in.
  *
- * If not, raises Unauthorized.
+ * If not, raises UnauthorizedError.
  */
 
 function ensureLoggedIn(req, res, next) {

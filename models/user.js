@@ -8,12 +8,12 @@ const { sqlForPartialUpdate, sqlForJobInsert } = require("../helpers/sql");
 const {
   NotFoundError,
   BadRequestError,
-  UnauthorizedError,
+  UnauthorizedError
 } = require("../expressError");
 
-const { BCRYPT_WORK_FACTOR, jobApplyJsToSql } = require("../config.js");
+const { BCRYPT_WORK_FACTOR, jobApplyJsToSql, userUpdateJsToSql } = require("../config.js");
 
-/** Related functions for users. */
+/** Simple Class ORM, related functions for users. */
 
 class User {
   /** authenticate user with username, password.
@@ -100,11 +100,11 @@ class User {
 
   /** Find all users.
    *
-   * Returns [{ username, first_name, last_name, email, is_admin }, ...]
+   * Returns [{ username, first_name, last_name, email, is_admin, jobs: [] }, ...]
    **/
 
   static async findAll() {
-    // ADDED LINE 108-149.
+    // ADDED LINE 108-162.
     const joinQuery = await db.query(
       `SELECT u.username,
           u.first_name AS "firstName",
@@ -127,6 +127,9 @@ class User {
     // If theres duplicate data, the logic
     // adds the jobId data to the user's object,
     // instead of the jobId and duplicated data.
+    // [{ username: "fvin", email: "fv@mail.com", jobId: 1},
+    // { username: "fvin", email: "fv@mail.com", jobId: 2}] =>
+    // { username: "fvin", email: "fv@mail.com", jobs: [1, 2]}.
     for (let data of joinRows) {
       // If the username doesn't exist in parsedUsernames,
       // push it to it, and make a user object.
@@ -152,7 +155,7 @@ class User {
         joinDataMap.get(data.username).jobs.push(data.jobId);
       }
     }
-
+    // Clear parsedUsernames.
     parsedUsernames.length = 0;
     const users = Object.fromEntries(joinDataMap);
     return users;
@@ -166,7 +169,7 @@ class User {
    * Throws NotFoundError if user not found.
    **/
 
-  // ADDED LINE 185-195.
+  // ADDED LINE 188-198.
   static async get(username) {
     const userRes = await db.query(
           `SELECT username,
@@ -181,7 +184,7 @@ class User {
 
     const user = userRes.rows[0];
     if (!user) throw new NotFoundError(`No user: ${username}`);
-
+    // ADDED LINE 188-198.
     const jobsRes = await db.query(
       `SELECT a.job_id AS "jobId"
        FROM users u
@@ -216,14 +219,11 @@ class User {
     if (data.password) {
       data.password = await bcrypt.hash(data.password, BCRYPT_WORK_FACTOR);
     }
-
+    // ADDED userUpdateJsToSql LINE 225.
     const { setCols, values } = sqlForPartialUpdate(
         data,
-        {
-          firstName: "first_name",
-          lastName: "last_name",
-          isAdmin: "is_admin",
-        });
+        userUpdateJsToSql
+    );
 
     const usernameVarIdx = "$" + (values.length + 1);
 

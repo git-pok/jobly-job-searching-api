@@ -3,7 +3,7 @@
 const db = require("../db");
 const { BadRequestError, NotFoundError, ExpressError } = require("../expressError");
 
-/** Simple Class ORM with related functions for applications. */
+/** Simple Class ORM, related functions for applications. */
 
 class Application {
   // /** Given a job id and username, see if application exists.

@@ -1,5 +1,4 @@
 // ADDED ALL LOGIC IN THIS FILE.
-const types = require('pg').types;
 const { BadRequestError } = require("../expressError");
 
 // Parses request body for id or companyHandle,

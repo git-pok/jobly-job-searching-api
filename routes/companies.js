@@ -1,7 +1,6 @@
 "use strict";
 
 /** Routes for companies. */
-// const db = require('../db.js');
 const jsonschema = require("jsonschema");
 const express = require("express");
 const { strToNum, verifyMinMaxEmps } = require('../helpers/sql.js');
@@ -21,9 +20,9 @@ const router = new express.Router();
  *
  * Returns { handle, name, description, numEmployees, logoUrl }
  *
- * Authorization required: login
+ * Authorization required: logged in and admin.
  */
-// ADDED ensureLoggedInAndAdmin IN LINE 27
+// ADDED ensureLoggedInAndAdmin IN LINE 26.
 router.post("/", ensureLoggedInAndAdmin, async function (req, res, next) {
   try {
     const validator = jsonschema.validate(req.body, companyNewSchema);
@@ -47,12 +46,12 @@ router.post("/", ensureLoggedInAndAdmin, async function (req, res, next) {
  * - maxEmployees
  * - nameLike (will find case-insensitive, partial matches)
  *
- * Authorization required: none
+ * Authorization required: none.
  */
 
 router.get("/", async function (req, res, next) {
   try {
-    // ADDED LINE 56-63
+    // ADDED LINE 55-62.
     const query = req.query;
     verifyMinMaxEmps(query);
     const queryObj = strToNum(query);
@@ -76,7 +75,7 @@ router.get("/", async function (req, res, next) {
  *
  * Authorization required: none
  */
-// CHANGED LINE 85.
+// CHANGED LINE 84.
 // I returned company instead of { company },
 // company is already structured in an object.
 router.get("/:handle", async function (req, res, next) {
@@ -96,10 +95,10 @@ router.get("/:handle", async function (req, res, next) {
  *
  * Returns { handle, name, description, numEmployees, logo_url }
  *
- * Authorization required: login
+ * Authorization required: logged in and admin.
  */
 
-// ADDED ensureLoggedInAndAdmin IN LINE 103
+// ADDED ensureLoggedInAndAdmin IN LINE 102.
 router.patch("/:handle", ensureLoggedInAndAdmin, async function (req, res, next) {
   try {
     const validator = jsonschema.validate(req.body, companyUpdateSchema);
@@ -117,10 +116,10 @@ router.patch("/:handle", ensureLoggedInAndAdmin, async function (req, res, next)
 
 /** DELETE /[handle]  =>  { deleted: handle }
  *
- * Authorization: login
+ * Authorization: logged in and admin.
  */
 
-// ADDED ensureLoggedInAndAdmin IN LINE 124
+// ADDED ensureLoggedInAndAdmin IN LINE 123.
 router.delete("/:handle", ensureLoggedInAndAdmin, async function (req, res, next) {
   try {
     await Company.remove(req.params.handle);

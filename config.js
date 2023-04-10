@@ -27,9 +27,9 @@ console.log("PORT:".yellow, PORT.toString());
 console.log("BCRYPT_WORK_FACTOR".yellow, BCRYPT_WORK_FACTOR);
 console.log("Database:".yellow, getDatabaseUri());
 console.log("---");
-// ADDED LINE 31-35
+// ADDED LINE 33-37
 // This gets passed into sqlForCoFilter in coFilter,
-// company.js, Line 154.
+// company.js.
 const coFilterJsToSql = {
   name: "name ILIKE",
   minEmployees: "num_employees >=",
@@ -38,7 +38,7 @@ const coFilterJsToSql = {
 
 // ADDED LINE 42-46.
 // This gets passed into sqlForPartialUpdate,
-// /models/job.js, Line 113.
+// /models/job.js.
 const jobJsToSql = {
   title: "title",
   salary: "salary",
@@ -46,9 +46,9 @@ const jobJsToSql = {
   equity: "equity"
 }
 
-// ADDED LINE 52-57.
+// ADDED LINE 52-56.
 // This gets passed into sqlForJobFilter,
-// /models/job.js, Line 159.
+// /models/job.js.
 const jobFilterJsToSql = {
   title: "title ILIKE",
   minSalary: "salary >=",
@@ -57,7 +57,7 @@ const jobFilterJsToSql = {
 
 // ADDED LINE 61-64.
 // This gets passed into sqlForJobFilter,
-// /models/job.js, Line 159.
+// /models/job.js.
 const jobApplyJsToSql = {
   username: "username",
   jobId: "job_id"
@@ -66,6 +66,16 @@ const jobApplyJsToSql = {
 // ADDED LINE 68
 // It gets used to transform numeric column data types to numbers.
 const CAST = "CAST(equity AS REAL)";
+
+// ADDED LINE 73-78.
+// This gets passed into sqlForPartialUpdate,
+// /models/user.js.
+const userUpdateJsToSql = {
+  firstName: "first_name",
+  lastName: "last_name",
+  isAdmin: "is_admin",
+  password: "password"
+}
 
 module.exports = {
   SECRET_KEY,
@@ -76,5 +86,6 @@ module.exports = {
   jobFilterJsToSql,
   jobApplyJsToSql,
   getDatabaseUri,
-  CAST
+  CAST,
+  userUpdateJsToSql
 };

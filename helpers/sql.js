@@ -3,12 +3,14 @@ const { BadRequestError, ExpressError } = require("../expressError");
 // EXPLAINED sqlForPartialUpdate WITH COMMENTS.
 
 function sqlForPartialUpdate(dataToUpdate, jsToSql) {
-  // Creates keys from query object.
+  // Takes keys from query object and makes an array of them.
+  // { numEmployees: 3, logoUrl: "ex.com"} =>
+  // [numEmployees, logoUrl].
   const keys = Object.keys(dataToUpdate);
-  // This throws an error if there is no data. 
+  // This throws an error if there is no data in keys. 
   if (keys.length === 0) throw new BadRequestError("No data");
-  // This sets the sql statements to their prot. values.
-  // It loops over the keys of the query object,
+  // This sets sql statements to their parameterized values.
+  // It loops over keys,
   // and accesses the corresponding sql commands from
   // the qryToSql object; this assures no extra sql commands
   // are added also. Then it uses each index of each key +1
@@ -19,7 +21,7 @@ function sqlForPartialUpdate(dataToUpdate, jsToSql) {
   );
   // Returns an object with one property set to
   // individual query statements, and another
-  // property set to each statement's value.
+  // property set to an array of each statement's value.
   // {setCols: '"first_name"=$1, "last_name"=$2', values: [ 'fVIN', 'eve' ]}
   return {
     setCols: cols.join(", "),
@@ -27,7 +29,11 @@ function sqlForPartialUpdate(dataToUpdate, jsToSql) {
   };
 }
 
-// ADDED LINE 31-59.
+// ADDED LINE 33-65.
+// This creates the sql statments and pg values array
+// for the Company filter query string.
+// { name: "wat", minEmployees: 300 } =>
+// {setCols: 'name ILIKE=$1 AND num_employees >=$2', values: [ 'wat', 300 ]}
 function sqlForCoFilter(dataToQuery, qryToSql) {
   const nameProp = dataToQuery.name;
   // If name in query, this wraps its value in %%,
@@ -37,8 +43,8 @@ function sqlForCoFilter(dataToQuery, qryToSql) {
   const keys = Object.keys(dataToQuery);
   // This throws an error if there is no data.
   if (keys.length === 0) throw new BadRequestError("No data");
-  // This sets the sql statements to their prot. values.
-  // It loops over the keys of the query object,
+  // This sets the sql statements to their parameterized values.
+  // It loops over keys,
   // and accesses the corresponding sql commands from
   // the qryToSql object; this assures no extra sql commands
   // are added also. Then it uses each index of each key +1
@@ -48,7 +54,7 @@ function sqlForCoFilter(dataToQuery, qryToSql) {
   const cols = keys.map((colName, idx) =>
       `${qryToSql[colName]} $${idx + 1}`,
   );
-  // Returns an object with one property set to
+  // This returns an object with one property set to
   // individual query statements, and another
   // property set to a pg value array.
   // {setCols: 'name ILIKE=$1 AND num_employees >=$2', values: [ 'wat', 300 ]}
@@ -58,7 +64,7 @@ function sqlForCoFilter(dataToQuery, qryToSql) {
   };
 }
 
-// ADDED LINE 67-74.
+// ADDED LINE 73-80.
 // This takes the minEmployees and maxEmployees
 // values from the query object and turns them
 // into numbers.
@@ -73,9 +79,11 @@ function strToNum(qryObj) {
   return newObj;
 }
 
-// ADDED LINE 79-84.
-// This verifies the minEmployees value is
-// never greater than the maxEmployees value. 
+// ADDED LINE 87-92.
+// This throws an error if minEmployees value is
+// greater than the maxEmployees value.
+// { minEmployees: 600, maxEmployees: 500,} =>
+// "minEmployees cannot be greater than maxEmployees".
 function verifyMinMaxEmps(qryObj) {
   const newObj = {...qryObj}; 
   const maxEmps = newObj.maxEmployees;
@@ -83,21 +91,21 @@ function verifyMinMaxEmps(qryObj) {
   if (minEmps > maxEmps) throw new ExpressError("minEmployees cannot be greater than maxEmployees", 400);
 }
 
-// ADDED LINE 91-96.
+// ADDED LINE 99-104.
 // This verfies there are no query parameters that
-// our logic doesn't solve for.
+// our Company filter feature logic doesn't solve for.
 // {"name": "wall", "minEmployees": 200} => true
 // {"name": "wall", "wrongParam": 200} => false
-function verifyQryParams(qryObj) {
+function verifyCoQryParams(qryObj) {
   const qryFilters = ['name', 'minEmployees', 'maxEmployees']; 
   const keys = Object.keys(qryObj);
   const verifyFilters = keys.every((val)=> qryFilters.indexOf(val) !== -1); 
   return verifyFilters;
 }
 
-// ADDED LINE 103-108.
+// ADDED LINE 111-116.
 // This verfies there are no query parameters that
-// our logic doesn't solve for.
+// our Job filter feature logic doesn't solve for.
 // {"title": "wall", "minSalary": 200} => true
 // {"name": "wall", "wrongParam": 200} => false
 function verifyJobQryParams(qryObj) {
@@ -107,8 +115,8 @@ function verifyJobQryParams(qryObj) {
   return verifyFilters;
 }
 
-// ADDED LINE 117-126.
-// Gets called in sqlForJobFilter(), line 136.
+// ADDED LINE 125-135.
+// Gets called in sqlForJobFilter().
 // This takes the query object and checks for hasEquity.
 // If hasEquity equals true, the value becomes zero.
 // If hasEquity equals false, the property is deleted.
@@ -116,29 +124,34 @@ function verifyJobQryParams(qryObj) {
 // { hasEquity: "false" } => {}.
 function hasEquityFilter(qryObj) {
   if (qryObj.hasEquity) {
+    // This normalizes the query string value.
     const qryProp = qryObj.hasEquity.replaceAll(' ', '').toLowerCase();
     if (qryProp === 'true') {
       qryObj.hasEquity = 0;
-    } if (qryProp === 'false') {
+    } else if (qryProp === 'false') {
       delete qryObj.hasEquity;
     }
   } 
 }
 
-// ADDED LINE 129-160.
+// ADDED LINE 142-173.
+// This creates the sql statments and pg values array
+// for the Job filter query string.
+// { title: "Programmer", minSalaray: 200000 } =>
+// {setCols: 'title ILIKE=$1 AND minSalary >=$2', values: [ 'Programmer', 100000 ]}
 function sqlForJobFilter(dataToQuery, qryToSql) {
   const titleProp = dataToQuery.title;
   // If title in query, this wraps its value in %%,
   // to make the postgresql ILIKE expression work.
   if (titleProp) dataToQuery.title = `%${titleProp}%`;
   // This checks for hasEquity and chnages its value.
-  // Look at the comments that start on line 14 of this file.
+  // Look at the comments that start on line 125 of this file.
   hasEquityFilter(dataToQuery);
   // This creates an array of keys out of the query object.
   const keys = Object.keys(dataToQuery);
   // This throws an error if there is no data.
   if (keys.length === 0) throw new BadRequestError("No data");
-  // This sets the sql statements to their prot. values.
+  // This sets the sql statements to their parameterized values.
   // It loops over the keys of the query object,
   // and accesses the corresponding sql commands from
   // the qryToSql object; this assures no extra sql commands
@@ -159,9 +172,9 @@ function sqlForJobFilter(dataToQuery, qryToSql) {
   };
 }
 
-// ADDED LINE 167-175.
-// This verfies there are no json parameters that
-// our logic doesn't solve for.
+// ADDED LINE 180-188.
+// This verfies there are no json body properties that
+// our Job.create() logic doesn't solve for, in jobs-routes.js.
 // {"title": "prog", "salary": 200} => true
 // {"title": "wall", "wrongParam": 200} => false
 function verifyCreateJobParams(qryObj) {
@@ -174,20 +187,20 @@ function verifyCreateJobParams(qryObj) {
   return verifyFilters;
 }
 
-// ADDED LINE 187-217.
+// ADDED LINE 200-230.
 // This accepts an object of data to be queried for
 // and an object of sql commands, and returns an object
 // that has sql insert statements, sql insert values
-// of pg values, and values.
+// of pg values, and values. It gets called in /models/user.js
 // (
 //  { username: 'Bowser', id: 206 },
-//  {username: 'username', id: 'job_id'}
+//  { username: 'username', id: 'job_id' }
 // ) => 
 // {setCols: (username, id), pgValues: ($1, $2), valuesArr: [Bowser, 206]}
 function sqlForJobInsert(dataToUpdate, jsToSql) {
   // This throws an error if there is no data. 
   if (!dataToUpdate || !jsToSql) throw new BadRequestError("No data");
-  // Creates keys from query object.
+  // Creates array of keys from query object.
   const keys = Object.keys(dataToUpdate);
   // This creates the insert sql columns.
   // It loops over the keys of the query object,
@@ -216,12 +229,13 @@ function sqlForJobInsert(dataToUpdate, jsToSql) {
   };
 }
 
+
 module.exports = {
   sqlForPartialUpdate,
   sqlForCoFilter,
   strToNum,
   verifyMinMaxEmps,
-  verifyQryParams,
+  verifyCoQryParams,
   verifyJobQryParams,
   sqlForJobFilter,
   verifyCreateJobParams,

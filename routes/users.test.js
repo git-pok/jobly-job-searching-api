@@ -101,7 +101,7 @@ describe("POST /users", function () {
 /************************************** POST /users/:username/jobs/:id  */
 // ADDED LINE 103-153.
 describe("POST /users/:username/jobs/:id ", function () {
-  test("create a job app: works for current user or admin", async function () {
+  test("create a job app: works for current user or admin", async ()=> {
     const jobId = await job1Id();
 
     const resp = await request(app)
@@ -114,7 +114,7 @@ describe("POST /users/:username/jobs/:id ", function () {
     expect(resp.body).toEqual({ applied: jobId });
   });
 
-  test("401 status code for unauthorized user", async function () {
+  test("401 status code for unauthorized user", async ()=> {
     const jobId = await job1Id();
 
     const resp = await request(app)
@@ -124,7 +124,7 @@ describe("POST /users/:username/jobs/:id ", function () {
     expect(resp.statusCode).toEqual(401);
   });
 
-  test("400 status code for invalid json schema", async function () {
+  test("400 status code for invalid json schema", async ()=> {
     const jobId = await job1Id();
 
     const resp = await request(app)
@@ -135,7 +135,7 @@ describe("POST /users/:username/jobs/:id ", function () {
     expect(resp.statusCode).toEqual(400);
   });
 
-  test("400 status code for duplicate", async function () {
+  test("400 status code for duplicate", async ()=> {
     const jobId = await job1Id();
 
     const resp = await request(app)
@@ -197,11 +197,12 @@ describe("GET /users", function () {
       },
     });
   });
-  // ADDED LINE 201-206.
-  test("401 status for non admin/current user", async function () {
+  // ADDED LINE 201-207.
+  test("401 status for non admin/current user", async ()=> {
     const resp = await request(app)
         .get("/users")
         .set("authorization", `Bearer ${u1Token}`);
+
     expect(resp.statusCode).toEqual(401);
   });
 
@@ -244,8 +245,8 @@ describe("GET /users/:username", function () {
     });   
   });
 
-  // ADDED LINE 248-271.
-  test("works for admin user", async function () {
+  // ADDED LINE 249-272.
+  test("get user: works for admin", async ()=> {
     const resp = await request(app)
         .get(`/users/u1`)
         .set("authorization", `Bearer ${u4Token}`);
@@ -262,7 +263,7 @@ describe("GET /users/:username", function () {
     });   
   });
 
-  test("401 status for non admin/current user", async function () {
+  test("401 status for non admin/current user", async ()=> {
     const resp = await request(app)
         .get(`/users/u2`)
         .set("authorization", `Bearer ${u1Token}`);
@@ -304,14 +305,15 @@ describe("PATCH /users/:username", () => {
       },
     });
   });
-  // ADDED LINE 308-335.
-  test("works for admin", async function () {
+  // ADDED LINE 309-336.
+  test("update user: works for admin", async ()=> {
     const resp = await request(app)
         .patch(`/users/u2`)
         .send({
           firstName: "New",
         })
         .set("authorization", `Bearer ${u4Token}`);
+
     expect(resp.body).toEqual({
       user: {
         username: "u2",
@@ -394,11 +396,12 @@ describe("DELETE /users/:username", function () {
 
     expect(resp.body).toEqual({ deleted: "u1" });
   });
-  // ADDED LINE 398-411.
-  test("delete user: works for admin", async function () {
+  // ADDED LINE 400-414.
+  test("delete user: works for admin", async ()=> {
     const resp = await request(app)
         .delete(`/users/u1`)
         .set("authorization", `Bearer ${u4Token}`);
+
     expect(resp.body).toEqual({ deleted: "u1" });
   });
 

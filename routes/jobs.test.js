@@ -1,5 +1,7 @@
 "use strict";
+
 // CREATED ALL LOGIC IN THIS FILE.
+
 process.env.NODE_ENV = 'test';
 const request = require("supertest");
 
@@ -15,7 +17,8 @@ const {
   u4Token,
   job1Id,
   job2Id,
-  job3Id
+  job3Id,
+  notFoundJobId
 } = require("./_testCommon");
 
 beforeAll(commonBeforeAll);
@@ -39,7 +42,7 @@ describe("POST /jobs", function () {
     "equity": 0.8
   };
 
-  test("create job with logged in admins", async function () {
+  test("create job with logged in admin", async ()=> {
     const resp = await request(app)
         .post("/jobs")
         .send(newJob)
@@ -57,19 +60,16 @@ describe("POST /jobs", function () {
     });
   });
 
-  test("400 status code for no data", async function () {
+  test("400 status code for no data", async ()=> {
     const resp = await request(app)
         .post("/jobs")
-        .send({
-          salary: 200000,
-          equity: 0.5,
-        })
+        .send({})
         .set("authorization", `Bearer ${u4Token}`);
 
     expect(resp.statusCode).toEqual(400);
   });
 
-  test("400 status code for invalid data", async function () {
+  test("400 status code for invalid data", async ()=> {
     const resp = await request(app)
         .post("/jobs")
         .send({
@@ -81,7 +81,7 @@ describe("POST /jobs", function () {
     expect(resp.statusCode).toEqual(400);
   });
 
-  test("400 status code for incorrect json schema", async function () {
+  test("400 status code for incorrect json schema", async ()=> {
     const resp = await request(app)
         .post("/jobs")
         .send({
@@ -96,7 +96,7 @@ describe("POST /jobs", function () {
 /************************************** GET /jobs */
 
 describe("GET /jobs", function () {
-  test("get jobs: all users authorized", async function () {
+  test("get jobs: all users authorized", async ()=> {
     const resp = await request(app).get("/jobs");
 
     expect(resp.body).toEqual({
@@ -117,8 +117,7 @@ describe("GET /jobs", function () {
               title: "Software Engineer",
               salary: 250000,
               equity: 0.4
-            }
-            ]
+            }]
     });
   });
 
@@ -136,7 +135,7 @@ describe("GET /jobs", function () {
 
 // /************************************** GET /jobs? */
 describe('/GET /jobs?', ()=> {
-  test('Query jobs with title filter', async ()=> {
+  test('query jobs with title filter', async ()=> {
     const res = await request(app).get('/jobs')
         .query({ title: "Programmer" });
     
@@ -153,7 +152,7 @@ describe('/GET /jobs?', ()=> {
     expect(res.body).toEqual( job );
   });
 
-  test('Query jobs with minSalary and hasEquity filter', async ()=> {
+  test('query jobs with minSalary and hasEquity filter', async ()=> {
     const res = await request(app).
         get('/jobs').
         query({ minSalary: 250000, hasEquity: "true" });
@@ -179,7 +178,7 @@ describe('/GET /jobs?', ()=> {
     expect(res.body).toEqual( jobs );
   });
 
-  test('Query with title, minSalary, and hasEquity filter', async ()=> {
+  test('query with title, minSalary, and hasEquity filter', async ()=> {
     const res = await request(app).get('/jobs')
         .query({ title: "Programmer", minSalary: 170000, hasEquity: "false" });
     
@@ -214,7 +213,7 @@ describe('/GET /jobs?', ()=> {
 // /************************************** GET /jobs/:handle */
 
 describe("GET /jobs/:handle", function () {
-  test("get jobs for company: works for all users", async function () {
+  test("get jobs for company: works for all users", async ()=> {
     const resp = await request(app).get(`/jobs/c1`);
 
     const id = await job1Id();
@@ -239,7 +238,7 @@ describe("GET /jobs/:handle", function () {
     expect(resp.body).toEqual( jobs );
   });
 
-  test("empty jobs array for company w/o jobs", async function () {
+  test("empty jobs array for company w/o jobs", async ()=> {
     const resp = await request(app).get(`/jobs/c4`);
 
     expect(resp.body).toEqual({
@@ -253,7 +252,7 @@ describe("GET /jobs/:handle", function () {
     });
   });
 
-  test("404 status code for no such company", async function () {
+  test("404 status code for no such company", async ()=> {
     const resp = await request(app).get(`/jobs/wat`);
     expect(resp.statusCode).toEqual(404);
   });
@@ -261,7 +260,7 @@ describe("GET /jobs/:handle", function () {
 
 // /************************************** PATCH /jobs/:id */
 describe("PATCH /jobs/:id", function () {
-  test("update a job: works for logged in admins", async function () {
+  test("update a job: works for logged in admins", async ()=> {
     const id = await job1Id();
 
     const resp = await request(app)
@@ -281,7 +280,7 @@ describe("PATCH /jobs/:id", function () {
     });
   });
 
-  test("401 unatuhorized status code for not logged in admin", async function () {
+  test("401 unatuhorized status code for not logged in admin", async ()=> {
     const id = await job1Id();
 
     const resp = await request(app)
@@ -293,9 +292,11 @@ describe("PATCH /jobs/:id", function () {
     expect(resp.statusCode).toEqual(401);
   });
 
-  test("404 status code for no such job", async function () {
+  test("404 status code for no such job", async ()=> {
+    const id = await notFoundJobId();
+
     const resp = await request(app)
-        .patch(`/jobs/203`)
+        .patch(`/jobs/${id}`)
         .send({
           title: "new nope",
         })
@@ -307,7 +308,7 @@ describe("PATCH /jobs/:id", function () {
 
 // /************************************** DELETE /jobs/:id */
 describe("DELETE /jobs/:id", function () {
-  test("delete job: works for logged in admins", async function () {
+  test("delete job: works for logged in admins", async ()=> {
     const id = await job1Id();
 
     const resp = await request(app)
@@ -317,7 +318,7 @@ describe("DELETE /jobs/:id", function () {
     expect(resp.body).toEqual({ deleted: `${id}` });
   });
 
-  test("401 unauthorized status code for not logged in admins", async function () {
+  test("401 unauthorized status code for not logged in admins", async ()=> {
     const id = await job1Id();
 
     const resp = await request(app)
@@ -326,9 +327,11 @@ describe("DELETE /jobs/:id", function () {
     expect(resp.statusCode).toEqual(401);
   });
 
-  test("404 status code for no such job", async function () {
+  test("404 status code for no such job", async ()=> {
+    const id = await notFoundJobId();
+
     const resp = await request(app)
-        .delete(`/jobs/20`)
+        .delete(`/jobs/${id}`)
         .set("authorization", `Bearer ${u4Token}`);
 
     expect(resp.statusCode).toEqual(404);

@@ -119,10 +119,10 @@ describe("GET /companies", function () {
   });
 });
 
-// ADDED LINE 114-175
+// ADDED LINE 124-196
 /************************************** GET /companies? */
 describe('/GET /companies?', ()=> {
-  test('Query with name filter', async ()=> {
+  test('query with name filter', async ()=> {
     const res = await request(app).get('/companies').query({ name: "c1" });
     
     const co1 = {
@@ -136,8 +136,10 @@ describe('/GET /companies?', ()=> {
     expect(res.body).toEqual( [ co1 ] );
   });
 
-  test('Query with name and minEmployees filter', async ()=> {
-    const res = await request(app).get('/companies').query({ name: "c", minEmployees: "2" });
+  test('query with name and minEmployees filter', async ()=> {
+    const res = await request(app)
+      .get('/companies')
+      .query({ name: "c", minEmployees: "2" });
     
     const co2 = {
       handle: "c2",
@@ -166,8 +168,10 @@ describe('/GET /companies?', ()=> {
     expect(res.body).toEqual( [ co2, co3, co4 ] );
   });
 
-  test('Query with name, minEmployees, and maxEmployees filter', async ()=> {
-    const res = await request(app).get('/companies').query({ name: "c", minEmployees: "2", maxEmployees: "2" });
+  test('query with name, minEmployees, and maxEmployees filter', async ()=> {
+    const res = await request(app)
+      .get('/companies')
+      .query({ name: "c", minEmployees: "2", maxEmployees: "2" });
     
     const co2 = {
       handle: "c2",
@@ -180,12 +184,12 @@ describe('/GET /companies?', ()=> {
     expect(res.body).toEqual( [ co2 ] );
   });
 
-  test('Returns an error for not found company', async ()=> {
+  test('404 status code for not found company', async ()=> {
     const res = await request(app).get('/companies').query({ name: "wat" });
     expect(res.statusCode).toBe(404);
   });
 
-  test('Returns an error for invalid query', async ()=> {
+  test('400 status code for invalid query', async ()=> {
     const res = await request(app).get('/companies').query({ wrong: "wat" });
     expect(res.statusCode).toBe(400);
   });
