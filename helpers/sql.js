@@ -71,12 +71,12 @@ function sqlForCoFilter(dataToQuery, qryToSql) {
 // {"name": "wall", "minEmployees": "200"} =>
 // {"name": "wall", "minEmployees": 200} 
 function strToNum(qryObj) {
-  const newObj = {...qryObj}; 
-  const maxEmps = newObj.maxEmployees;
-  const minEmps = newObj.minEmployees;
-  if (maxEmps) newObj.maxEmployees = +maxEmps;
-  if (minEmps) newObj.minEmployees = +minEmps;
-  return newObj;
+  // const newObj = {...qryObj}; 
+  const maxEmps = qryObj.maxEmployees;
+  const minEmps = qryObj.minEmployees;
+  if (maxEmps) qryObj.maxEmployees = +maxEmps;
+  if (minEmps) qryObj.minEmployees = +minEmps;
+  return qryObj;
 }
 
 // ADDED LINE 87-92.
@@ -85,9 +85,9 @@ function strToNum(qryObj) {
 // { minEmployees: 600, maxEmployees: 500,} =>
 // "minEmployees cannot be greater than maxEmployees".
 function verifyMinMaxEmps(qryObj) {
-  const newObj = {...qryObj}; 
-  const maxEmps = newObj.maxEmployees;
-  const minEmps = newObj.minEmployees;
+  // const newObj = {...qryObj}; 
+  const maxEmps = qryObj.maxEmployees;
+  const minEmps = qryObj.minEmployees;
   if (minEmps > maxEmps) throw new ExpressError("minEmployees cannot be greater than maxEmployees", 400);
 }
 
